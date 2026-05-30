@@ -22,6 +22,10 @@ extern "C" {
 
 #include "pipeline_node.h"
 
+int pipeline_add_output(
+    PipelineNode *node,
+    PipelineNode *output);
+
 int pipeline_start(
     PipelineNode *node);
 

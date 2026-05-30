@@ -53,7 +53,7 @@ flowchart TD
 flowchart TD
     M[CameraManager] -->|owns| C[Camera]
     C -->|owns| P1[PipelineNode: Encoder]
-    P1 -->|next| P2[PipelineNode: RTSP]
+    P1 -->|output| P2[PipelineNode: RTSP]
     C -->|contains| V[V4L2Device]
 
     MD[camera_manager_destroy] --> CD[camera_destroy for each Camera]
@@ -159,20 +159,21 @@ flowchart TD
     K -->|success| DONE[job done]
 ```
 
-## 6. Pipeline Destroy Flow
+## 6. Pipeline Graph Destroy Flow
 
 ```mermaid
 flowchart TD
     A[pipeline_destroy node] --> B{node is NULL?}
     B -->|yes| Z[done]
-    B -->|no| C[save next node]
-    C --> D[clear node.next]
-    D --> E{destroy callback exists?}
+    B -->|no| C{visited?}
+    C -->|yes| Z
+    C -->|no| D[mark visited]
+    D --> O[destroy output nodes]
+    O --> E{destroy callback exists?}
     E -->|yes| F[node.destroy node]
     E -->|no| G[skip destroy]
-    F --> H[node = saved next]
-    G --> H
-    H --> B
+    F --> Z
+    G --> Z
 ```
 
 ## 7. Module Relationship Overview

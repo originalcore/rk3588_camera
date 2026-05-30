@@ -164,7 +164,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    encoder->next = rtsp;
+    if (pipeline_add_output(encoder, rtsp) < 0)
+    {
+        CAMERA_LOG_ERROR("failed to link pipeline nodes");
+        pipeline_destroy(encoder);
+        pipeline_destroy(rtsp);
+        camera_destroy(front_cam);
+        camera_manager_destroy(mgr);
+        camera_log_fini();
+        return 1;
+    }
 
     if (camera_set_pipeline(front_cam, encoder) < 0)
     {

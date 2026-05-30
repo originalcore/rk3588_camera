@@ -22,6 +22,8 @@ extern "C" {
 
 #include "frame.h"
 
+#define PIPELINE_MAX_OUTPUTS 8
+
 typedef struct PipelineNode PipelineNode;
 
 struct PipelineNode
@@ -35,7 +37,9 @@ struct PipelineNode
 
     void (*destroy)(PipelineNode *node);
 
-    PipelineNode *next;
+    PipelineNode *outputs[PIPELINE_MAX_OUTPUTS];
+
+    int output_num;
 
     void *private_data;
 };

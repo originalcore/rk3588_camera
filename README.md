@@ -64,6 +64,14 @@ V4L2 capture -> FrameQueue -> ThreadPool worker -> encoder -> rtsp -> V4L2 queue
 
 The current camera pipeline uses one worker in the pipeline pool. The module boundary is prepared so future capture, encoder, RTSP, and AI work can be split into independent worker pools or dedicated threads.
 
+Pipeline nodes use graph-style outputs rather than a single linear `next` pointer. A node can fan out one frame to multiple downstream nodes:
+
+```text
+capture -> isp -> rtsp
+              -> ai
+              -> recorder
+```
+
 ## Build
 
 From the project root:

@@ -176,7 +176,7 @@ Added:
 
 Behavior:
 
-- `pipeline_destroy()` walks the linked list and calls each node's `destroy` callback.
+- `pipeline_destroy()` walks the pipeline graph and calls each node's `destroy` callback once.
 
 ### Pipeline Nodes
 
@@ -210,7 +210,7 @@ Changes:
 - Creates pipeline nodes dynamically:
   - encoder node
   - RTSP node
-- Links pipeline with `encoder->next = rtsp`.
+- Links pipeline nodes with `pipeline_add_output(encoder, rtsp)`.
 - Gives pipeline ownership to the camera through `camera_set_pipeline()`.
 - Gives camera ownership to the manager through `camera_manager_add()`.
 - Polls the camera through `camera_manager_get(mgr, 0)`.
@@ -433,6 +433,36 @@ Added Android Camera HAL-style events:
 - `CAMERA_EVENT_STREAM_OFF`
 
 `Camera` owns an `EventBus` and publishes stream and frame events around capture and pipeline processing.
+
+## 16. Graph Pipeline
+
+Replaced the linear `PipelineNode.next` chain with graph-style outputs:
+
+```c
+PipelineNode *outputs[PIPELINE_MAX_OUTPUTS];
+int output_num;
+```
+
+Added:
+
+- `PIPELINE_MAX_OUTPUTS`
+- `pipeline_add_output(PipelineNode *node, PipelineNode *output)`
+
+Pipeline traversal now supports fan-out and protects graph operations with a visited set so shared nodes are started, stopped, processed, and destroyed once per traversal.
+
+Current app wiring still creates `encoder -> rtsp` behavior, but it now uses:
+
+```c
+pipeline_add_output(encoder, rtsp);
+```
+
+This prepares the framework for a graph such as:
+
+```text
+capture -> isp -> rtsp
+              -> ai
+              -> recorder
+```
 
 These were not forced into the current change set because they affect broader design or runtime behavior:
 

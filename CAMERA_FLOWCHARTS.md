@@ -9,7 +9,8 @@ This document uses Mermaid diagrams. Markdown viewers that support Mermaid can r
 ```mermaid
 flowchart TD
     A[main] --> A1[build CameraConfig]
-    A1 --> B[camera_manager_create]
+    A1 --> A2[camera_log_init conf/zlog.conf]
+    A2 --> B[camera_manager_create]
     B -->|success| C[camera_create config]
     B -->|failed| Z1[return 1]
 
@@ -42,7 +43,8 @@ flowchart TD
     L -->|success| J
     L -->|failed| M[break loop]
     M --> N[camera_manager_destroy]
-    N --> O[return 0]
+    N --> P[camera_log_fini]
+    P --> O[return 0]
 ```
 
 ## 2. Ownership And Lifecycle

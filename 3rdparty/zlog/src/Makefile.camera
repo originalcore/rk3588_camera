@@ -1,0 +1,29 @@
+# /***********************************************************************#
+# * @file    Makefile.camera                                              #
+# * @brief   zlog objects for camera framework                            #
+#************************************************************************/#
+# /*@{*/
+
+obj-y += buf.o
+obj-y += category.o
+obj-y += category_table.o
+obj-y += conf.o
+obj-y += consumer.o
+obj-y += event.o
+obj-y += fifo.o
+obj-y += format.o
+obj-y += level.o
+obj-y += level_list.o
+obj-y += lockfile.o
+obj-y += mdc.o
+obj-y += record.o
+obj-y += record_table.o
+obj-y += rotater.o
+obj-y += rule.o
+obj-y += spec.o
+obj-y += thread.o
+obj-y += zc_arraylist.o
+obj-y += zc_hashtable.o
+obj-y += zc_profile.o
+obj-y += zc_util.o
+obj-y += zlog.o

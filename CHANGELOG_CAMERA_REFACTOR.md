@@ -315,6 +315,40 @@ Changes:
 - Updated encoder and RTSP nodes to implement no-op start/stop callbacks.
 - Updated `main.c` to create the camera from `CameraConfig`.
 
+## 11. zlog Integration
+
+The project now vendors zlog from:
+
+```text
+https://github.com/HardySimpson/zlog.git
+```
+
+Changes:
+
+- Added zlog source under `3rdparty/zlog`.
+- Added `3rdparty/Makefile` so third-party code participates in the existing recursive build.
+- Added `3rdparty/zlog/src/Makefile.camera` to compile zlog library objects into the project without building zlog's command-line tools.
+- Added `src/log` module:
+  - `src/log/include/camera_log.h`
+  - `src/log/camera_log.c`
+- Added `conf/zlog.conf`.
+- Replaced application `printf/fprintf` logging with `CAMERA_LOG_*` macros backed by zlog.
+- Replaced encoder and RTSP node debug prints with zlog debug logs.
+- `main.c` now initializes logging with:
+
+```c
+camera_log_init("conf/zlog.conf");
+```
+
+Log level is controlled by `conf/zlog.conf`:
+
+```text
+camera.DEBUG >stdout; normal
+camera.DEBUG "logs/camera.log", 10MB * 5; normal
+```
+
+Change `DEBUG` to `INFO`, `WARN`, `ERROR`, or `FATAL` to adjust runtime log verbosity through configuration.
+
 These were not forced into the current change set because they affect broader design or runtime behavior:
 
 - Add a real RTSP implementation or rename the current RTSP node to a debug/output node.

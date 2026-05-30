@@ -15,5 +15,6 @@ obj-y += callback/
 obj-y += core/
 obj-y += dma/
 obj-y += isp/
+obj-y += log/
 obj-y += pipeline/
 obj-y += v4l2/

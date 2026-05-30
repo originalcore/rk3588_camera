@@ -4,3 +4,5 @@ built-in.o
 bin/
 version/
 .git-repo/
+logs/*
+!logs/.gitkeep

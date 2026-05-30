@@ -13,8 +13,8 @@
 /*@{*/
 
 #include "pipeline_node.h"
+#include "camera_log.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 static int encoder_start(
@@ -39,7 +39,7 @@ static int encoder_process(
 {
     (void)node;
 
-    printf("encoder frame size=%zu\n", frame->size);
+    CAMERA_LOG_DEBUG("encoder frame size=%zu", frame->size);
 
     return 0;
 }

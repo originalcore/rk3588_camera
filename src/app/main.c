@@ -15,19 +15,14 @@
 #include "camera.h"
 #include "version.h"
 #include "camera_manager.h"
+#include "camera_log.h"
 #include "pipeline.h"
 #include "pipeline_node_factory.h"
 
 #include <linux/videodev2.h>
-#include <stdio.h>
-
-void print_version(void)
+static void print_version(void)
 {
-    printf("\n\n================================================================================\n");
-    printf("********************************************************************************\n");
-    printf ("%s\n", version_string);
-    printf("********************************************************************************\n");
-    printf("================================================================================\n\n");
+    CAMERA_LOG_INFO("%s", version_string);
 }
 
 int main(int argc, char *argv[])
@@ -51,28 +46,34 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    print_version();
+    if (camera_log_init("conf/zlog.conf") < 0)
+        return 1;
 
     mgr = camera_manager_create();
     if (!mgr)
     {
-        fprintf(stderr, "failed to create camera manager\n");
+        CAMERA_LOG_ERROR("failed to create camera manager");
+        camera_log_fini();
         return 1;
     }
+
+    print_version();
 
     front_cam = camera_create(&config);
     if (!front_cam)
     {
-        fprintf(stderr, "failed to open camera device\n");
+        CAMERA_LOG_ERROR("failed to open camera device");
         camera_manager_destroy(mgr);
+        camera_log_fini();
         return 1;
     }
 
     if (camera_start(front_cam) < 0)
     {
-        fprintf(stderr, "failed to start camera device\n");
+        CAMERA_LOG_ERROR("failed to start camera device");
         camera_destroy(front_cam);
         camera_manager_destroy(mgr);
+        camera_log_fini();
         return 1;
     }
 
@@ -80,11 +81,12 @@ int main(int argc, char *argv[])
     rtsp = rtsp_node_create();
     if (!encoder || !rtsp)
     {
-        fprintf(stderr, "failed to create pipeline nodes\n");
+        CAMERA_LOG_ERROR("failed to create pipeline nodes");
         pipeline_destroy(encoder);
         pipeline_destroy(rtsp);
         camera_destroy(front_cam);
         camera_manager_destroy(mgr);
+        camera_log_fini();
         return 1;
     }
 
@@ -94,9 +96,10 @@ int main(int argc, char *argv[])
 
     if (camera_manager_add(mgr, front_cam) < 0)
     {
-        fprintf(stderr, "failed to add camera\n");
+        CAMERA_LOG_ERROR("failed to add camera");
         camera_destroy(front_cam);
         camera_manager_destroy(mgr);
+        camera_log_fini();
         return 1;
     }
 
@@ -109,12 +112,13 @@ int main(int argc, char *argv[])
 
         if (!cam || camera_poll(cam) < 0)
         {
-            fprintf(stderr, "failed to poll camera\n");
+            CAMERA_LOG_ERROR("failed to poll camera");
             break;
         }
     }
 
     camera_manager_destroy(mgr);
+    camera_log_fini();
 
     return 0;
 }

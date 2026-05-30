@@ -33,15 +33,18 @@ VERSION_DIR = version
 
 TARGET := camera 
 TARGET_PREFIX := $(shell echo $(TARGET) | tr [a-z] [A-Z])
+CAMERA_FRAMEWORK_BUILD := 1
 
 export AS LD CC CPP AR NM
 export STRIP OBJCOPY OBJDUMP
+export CAMERA_FRAMEWORK_BUILD
 
 
 CFLAGS := -Wall -O2 -g -I $(shell pwd)/version
+CFLAGS += -DCAMERA_FRAMEWORK_BUILD=1
 
 ifeq (i386,$(ARCH))
-	CFLAGS += -I $(shell pwd)/src/app/include -I $(shell pwd)//src/callback/include -I $(shell pwd)//src/core/include  -I $(shell pwd)//src/dma/include  -I $(shell pwd)/src/isp/include  -I $(shell pwd)/src/pipeline/include -I $(shell pwd)/src/v4l2/include  
+	CFLAGS += -I $(shell pwd)/src/app/include -I $(shell pwd)//src/callback/include -I $(shell pwd)//src/core/include  -I $(shell pwd)//src/dma/include  -I $(shell pwd)/src/isp/include  -I $(shell pwd)/src/log/include  -I $(shell pwd)/src/pipeline/include -I $(shell pwd)/src/v4l2/include -I $(shell pwd)/3rdparty/zlog/src
 	LDFLAGS := -lm -lrt -ldl -lpthread
 endif
 
@@ -70,6 +73,7 @@ endif
 
 VERSION_FILE := version.h
 
+obj-y += 3rdparty/
 obj-y += src/
 
 all: $(VERSION_FILE)   

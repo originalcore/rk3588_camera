@@ -68,15 +68,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (camera_start(front_cam) < 0)
-    {
-        CAMERA_LOG_ERROR("failed to start camera device");
-        camera_destroy(front_cam);
-        camera_manager_destroy(mgr);
-        camera_log_fini();
-        return 1;
-    }
-
     encoder = encoder_node_create();
     rtsp = rtsp_node_create();
     if (!encoder || !rtsp)
@@ -92,7 +83,24 @@ int main(int argc, char *argv[])
 
     encoder->next = rtsp;
 
-    camera_set_pipeline(front_cam, encoder);
+    if (camera_set_pipeline(front_cam, encoder) < 0)
+    {
+        CAMERA_LOG_ERROR("failed to set camera pipeline");
+        pipeline_destroy(encoder);
+        camera_destroy(front_cam);
+        camera_manager_destroy(mgr);
+        camera_log_fini();
+        return 1;
+    }
+
+    if (camera_start(front_cam) < 0)
+    {
+        CAMERA_LOG_ERROR("failed to start camera device");
+        camera_destroy(front_cam);
+        camera_manager_destroy(mgr);
+        camera_log_fini();
+        return 1;
+    }
 
     if (camera_manager_add(mgr, front_cam) < 0)
     {

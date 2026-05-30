@@ -12,5 +12,3 @@
 
 obj-y += v4l2_device.o
 obj-y += media_controller.o
-obj-y += v4l2_device.o
-

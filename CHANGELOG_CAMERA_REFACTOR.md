@@ -349,6 +349,18 @@ camera.DEBUG "logs/camera.log", 10MB * 5; normal
 
 Change `DEBUG` to `INFO`, `WARN`, `ERROR`, or `FATAL` to adjust runtime log verbosity through configuration.
 
+## 12. Review Fixes
+
+Fixed issues found during code review:
+
+- `main.c` now creates and attaches the pipeline before calling `camera_start()`.
+- `main.c` now checks the return value of `camera_set_pipeline()`.
+- Removed duplicate `v4l2_device.o` from `src/v4l2/Makefile`.
+- Added `V4L2Device.streaming` to track stream state.
+- `v4l2_device_start()` is now idempotent when already streaming.
+- `v4l2_device_stop()` now skips `VIDIOC_STREAMOFF` when the device is not streaming.
+- `v4l2_device_close()` only stops streaming when the streaming flag is set.
+
 These were not forced into the current change set because they affect broader design or runtime behavior:
 
 - Add a real RTSP implementation or rename the current RTSP node to a debug/output node.

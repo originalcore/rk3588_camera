@@ -46,6 +46,8 @@ typedef struct
 
     unsigned int pixfmt;
 
+    int streaming;
+
     VideoBuffer buffers[MAX_BUFFER_COUNT];
 
     int buffer_count;

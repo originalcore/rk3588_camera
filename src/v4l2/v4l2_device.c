@@ -197,9 +197,21 @@ int v4l2_device_start(
 {
     int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    return ioctl(dev->fd,
-                 VIDIOC_STREAMON,
-                 &type);
+    if (!dev ||
+        dev->fd < 0)
+        return -1;
+
+    if (dev->streaming)
+        return 0;
+
+    if (ioctl(dev->fd,
+              VIDIOC_STREAMON,
+              &type) < 0)
+        return -1;
+
+    dev->streaming = 1;
+
+    return 0;
 }
 
 int v4l2_device_stop(
@@ -211,9 +223,17 @@ int v4l2_device_stop(
         dev->fd < 0)
         return -1;
 
-    return ioctl(dev->fd,
-                 VIDIOC_STREAMOFF,
-                 &type);
+    if (!dev->streaming)
+        return 0;
+
+    if (ioctl(dev->fd,
+              VIDIOC_STREAMOFF,
+              &type) < 0)
+        return -1;
+
+    dev->streaming = 0;
+
+    return 0;
 }
 
 int v4l2_device_capture(
@@ -284,7 +304,8 @@ void v4l2_device_close(
     if (!dev)
         return;
 
-    if (dev->fd >= 0)
+    if (dev->fd >= 0 &&
+        dev->streaming)
         v4l2_device_stop(dev);
 
     v4l2_device_release_buffers(dev);

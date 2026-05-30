@@ -13,35 +13,46 @@
 /*@{*/
 
 #include "dmabuf_allocator.h"
+#include "dma_heap.h"
 
-#include <unistd.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <stdio.h>
+#include <string.h>
 
 int dmabuf_allocate(
     DMABuffer *buf,
     size_t size)
 {
-    buf->size = size;
+    DMAHeapBuffer heap_buffer;
 
+    if (!buf)
+        return -1;
+
+    memset(buf, 0, sizeof(*buf));
     buf->fd = -1;
 
-    buf->vaddr = mmap(NULL,
-                      size,
-                      PROT_READ | PROT_WRITE,
-                      MAP_SHARED | MAP_ANONYMOUS,
-                      -1,
-                      0);
-
-    if (buf->vaddr == MAP_FAILED)
+    if (dma_heap_alloc(NULL, size, &heap_buffer) < 0)
         return -1;
+
+    buf->fd = heap_buffer.fd;
+    buf->vaddr = heap_buffer.vaddr;
+    buf->size = heap_buffer.size;
 
     return 0;
 }
 
 void dmabuf_release(DMABuffer *buf)
 {
-    munmap(buf->vaddr, buf->size);
-}
+    DMAHeapBuffer heap_buffer;
 
+    if (!buf)
+        return;
+
+    heap_buffer.fd = buf->fd;
+    heap_buffer.vaddr = buf->vaddr;
+    heap_buffer.size = buf->size;
+
+    dma_heap_free(&heap_buffer);
+
+    buf->fd = -1;
+    buf->vaddr = NULL;
+    buf->size = 0;
+}

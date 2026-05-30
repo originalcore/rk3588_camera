@@ -190,6 +190,7 @@ flowchart LR
     CAM --> FQ[FrameQueue]
     CAM --> TP[ThreadPool]
     CAM --> EB[EventBus]
+    V4L2 --> DMA[hal/dma DMA-BUF helpers]
 
     PL --> PN[pipeline_node]
     CF --> ENC[encoder_node]
@@ -198,6 +199,9 @@ flowchart LR
     RTSP --> PN
 
     V4L2 --> FR[Frame]
+    DMA --> FR
+    FR --> FD[dma_fd]
+    FR --> VA[vaddr]
     PN --> FR
     FL --> FR
     EB --> EVT[CameraEvent]

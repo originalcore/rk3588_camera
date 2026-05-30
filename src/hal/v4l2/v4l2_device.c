@@ -256,7 +256,9 @@ int v4l2_device_capture(
     if (buf.index >= (unsigned int)dev->buffer_count)
         return -1;
 
-    frame->data = dev->buffers[buf.index].start;
+    frame->dma_fd = -1;
+
+    frame->vaddr = dev->buffers[buf.index].start;
 
     frame->size = buf.bytesused;
 

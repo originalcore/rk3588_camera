@@ -19,7 +19,7 @@ This project is a C camera framework skeleton based on V4L2 capture, a simple pi
 │   │   ├── core/            # Camera, manager, pipeline core
 │   │   └── pipeline/        # Pipeline node implementations
 │   ├── hal/                 # Hardware abstraction layer
-│   │   ├── dma/             # DMA buffer abstraction placeholder
+│   │   ├── dma/             # DMA heap and DMA-BUF fd sharing helpers
 │   │   ├── isp/             # ISP bridge placeholder
 │   │   └── v4l2/            # V4L2 device wrapper
 │   ├── utils/
@@ -71,6 +71,21 @@ capture -> isp -> rtsp
               -> ai
               -> recorder
 ```
+
+`Frame` is structured around DMA-BUF sharing. The primary handle is `dma_fd`; `vaddr` is only the optional CPU mapping:
+
+```c
+typedef struct {
+    int dma_fd;
+    void *vaddr;
+    size_t size;
+    int width;
+    int height;
+    uint32_t pixfmt;
+} Frame;
+```
+
+The current V4L2 path still uses MMAP buffers, so it sets `dma_fd = -1` and fills `vaddr`. The DMA HAL already provides `dma_heap`, `dmabuf_export`, `dmabuf_import`, and `dmabuf_sync` modules for the RK3588-style V4L2/RGA/MPP/RKNN shared-fd path.
 
 ## Build
 

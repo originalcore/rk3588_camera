@@ -25,7 +25,9 @@ extern "C" {
 typedef struct
 {
 
-    void *data;
+    int dma_fd;
+
+    void *vaddr;
 
     size_t size;
 
@@ -36,8 +38,6 @@ typedef struct
     uint32_t pixfmt;
 
     uint64_t timestamp;
-
-    int dma_fd;
 
     int index;
 

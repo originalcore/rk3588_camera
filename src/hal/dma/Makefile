@@ -10,5 +10,9 @@
 #************************************************************************/#
 # /*@{*/
 
+obj-y += dma_heap.o
 obj-y += dmabuf_allocator.o
+obj-y += dmabuf_export.o
+obj-y += dmabuf_import.o
+obj-y += dmabuf_sync.o
 

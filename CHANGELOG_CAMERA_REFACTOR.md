@@ -464,6 +464,45 @@ capture -> isp -> rtsp
               -> recorder
 ```
 
+## 17. DMA-BUF Oriented Frame And DMA HAL
+
+Updated `Frame` to use DMA-BUF sharing semantics:
+
+```c
+typedef struct {
+    int dma_fd;
+    void *vaddr;
+    size_t size;
+    int width;
+    int height;
+    uint32_t pixfmt;
+} Frame;
+```
+
+Additional metadata such as timestamp and V4L2 buffer index remains in the current skeleton for lifecycle handling.
+
+Added RK3588-oriented DMA HAL modules:
+
+- `src/hal/dma/dma_heap.c`
+- `src/hal/dma/include/dma_heap.h`
+- `src/hal/dma/dmabuf_export.c`
+- `src/hal/dma/include/dmabuf_export.h`
+- `src/hal/dma/dmabuf_import.c`
+- `src/hal/dma/include/dmabuf_import.h`
+- `src/hal/dma/dmabuf_sync.c`
+- `src/hal/dma/include/dmabuf_sync.h`
+
+Updated `dmabuf_allocator.c` to wrap `dma_heap_alloc()` instead of anonymous `mmap()`.
+
+The current V4L2 capture path is still MMAP-based, so `v4l2_device_capture()` sets:
+
+```c
+frame->dma_fd = -1;
+frame->vaddr = dev->buffers[index].start;
+```
+
+This keeps the framework buildable now while preparing the frame contract for V4L2, RGA, MPP, and RKNN shared fd pipelines.
+
 These were not forced into the current change set because they affect broader design or runtime behavior:
 
 - Add a real RTSP implementation or rename the current RTSP node to a debug/output node.

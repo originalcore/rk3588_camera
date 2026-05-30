@@ -50,6 +50,16 @@ linux/videodev2.h
 
 The default target is built for the current Linux host with `ARCH=i386` in `Makefile`. The build currently uses the host `gcc` unless `CROSS_COMPILE` is configured.
 
+## Runtime Pipeline Model
+
+The capture path uses an internal frame queue so slow encoder or network output does not block `camera_poll()` directly:
+
+```text
+V4L2 capture -> FrameQueue -> pipeline thread -> encoder -> rtsp -> V4L2 queue
+```
+
+`FrameQueue` is defined in `src/framework/core/include/buffer_queue.h` with 32 frame slots. When the queue is full, the current frame is returned to V4L2 and dropped with a warning.
+
 ## Build
 
 From the project root:

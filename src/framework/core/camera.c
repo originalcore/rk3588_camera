@@ -13,10 +13,14 @@
 /*@{*/
 #include "camera.h"
 #include "pipeline.h"
+#include "camera_log.h"
 
 #include <linux/videodev2.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#define CAMERA_PIPELINE_IDLE_US 1000
 
 static void camera_set_error(
     Camera *cam)
@@ -38,6 +42,42 @@ static void camera_dispatch_frame(
             cam->listeners[i],
             frame);
     }
+}
+
+static void *camera_pipeline_worker(
+    void *arg)
+{
+    Camera *cam = arg;
+
+    while (!cam->pipeline_thread_exit ||
+           !frame_queue_is_empty(&cam->queue))
+    {
+        Frame frame;
+        int ret = 0;
+
+        if (frame_queue_pop(&cam->queue, &frame) < 0)
+        {
+            usleep(CAMERA_PIPELINE_IDLE_US);
+            continue;
+        }
+
+        if (cam->pipeline &&
+            pipeline_push_frame(cam->pipeline, &frame) < 0)
+            ret = -1;
+
+        camera_dispatch_frame(cam, &frame);
+
+        if (v4l2_device_queue(&cam->device, frame.index) < 0)
+            ret = -1;
+
+        if (ret < 0)
+        {
+            CAMERA_LOG_ERROR("failed to process queued frame");
+            camera_set_error(cam);
+        }
+    }
+
+    return NULL;
 }
 
 static int camera_validate_config(
@@ -128,10 +168,18 @@ int camera_open(
     cam->config = *config;
     cam->listener_count = 0;
     cam->pipeline = NULL;
+    cam->pipeline_thread_exit = 0;
+
+    if (frame_queue_init(&cam->queue) < 0)
+    {
+        camera_set_error(cam);
+        return -1;
+    }
 
     if (v4l2_device_open(&cam->device,
                          config->device) < 0)
     {
+        frame_queue_deinit(&cam->queue);
         camera_set_error(cam);
         return -1;
     }
@@ -139,6 +187,7 @@ int camera_open(
     if (v4l2_device_query_capability(&cam->device) < 0)
     {
         v4l2_device_close(&cam->device);
+        frame_queue_deinit(&cam->queue);
         camera_set_error(cam);
         return -1;
     }
@@ -150,6 +199,7 @@ int camera_open(
             config->pixfmt) < 0)
     {
         v4l2_device_close(&cam->device);
+        frame_queue_deinit(&cam->queue);
         camera_set_error(cam);
         return -1;
     }
@@ -159,6 +209,7 @@ int camera_open(
             config->buffer_count) < 0)
     {
         v4l2_device_close(&cam->device);
+        frame_queue_deinit(&cam->queue);
         camera_set_error(cam);
         return -1;
     }
@@ -191,6 +242,22 @@ int camera_start(
         return -1;
     }
 
+    cam->pipeline_thread_exit = 0;
+    frame_queue_reset(&cam->queue);
+
+    if (camera_thread_start(&cam->pipeline_thread,
+                            camera_pipeline_worker,
+                            cam) < 0)
+    {
+        v4l2_device_stop(&cam->device);
+
+        if (cam->pipeline)
+            pipeline_stop(cam->pipeline);
+
+        camera_set_error(cam);
+        return -1;
+    }
+
     cam->state = CAMERA_STATE_RUNNING;
 
     return 0;
@@ -209,6 +276,11 @@ int camera_stop(
 
     if (cam->state == CAMERA_STATE_RUNNING)
     {
+        cam->pipeline_thread_exit = 1;
+
+        if (camera_thread_join(&cam->pipeline_thread) < 0)
+            ret = -1;
+
         if (v4l2_device_stop(&cam->device) < 0)
             ret = -1;
 
@@ -237,20 +309,12 @@ int camera_poll(
         return -1;
     }
 
-    if (cam->pipeline &&
-        pipeline_push_frame(cam->pipeline, &frame) < 0)
+    if (frame_queue_push(&cam->queue, &frame) < 0)
     {
         v4l2_device_queue(&cam->device, frame.index);
-        camera_set_error(cam);
-        return -1;
-    }
-
-    camera_dispatch_frame(cam, &frame);
-
-    if (v4l2_device_queue(&cam->device, frame.index) < 0)
-    {
-        camera_set_error(cam);
-        return -1;
+        CAMERA_LOG_WARN("frame queue is full, drop frame index=%d",
+                        frame.index);
+        return 0;
     }
 
     return 0;
@@ -272,6 +336,7 @@ void camera_close(
     }
 
     v4l2_device_close(&cam->device);
+    frame_queue_deinit(&cam->queue);
     cam->listener_count = 0;
     cam->state = CAMERA_STATE_CLOSED;
 }

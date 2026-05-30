@@ -23,6 +23,8 @@ extern "C" {
 #include "frame.h"
 #include "frame_listener.h"
 #include "pipeline_node.h"
+#include "buffer_queue.h"
+#include "thread.h"
 #include "v4l2_device.h"
 
 #define MAX_FRAME_LISTENER 16
@@ -58,6 +60,12 @@ typedef struct
     int listener_count;
 
     PipelineNode *pipeline;
+
+    FrameQueue queue;
+
+    CameraThread pipeline_thread;
+
+    int pipeline_thread_exit;
 
 } Camera;
 

@@ -18,19 +18,15 @@
 
 CameraManager *camera_manager_create(void)
 {
-    return calloc(1,
-                  sizeof(CameraManager));
+    return calloc(1, sizeof(CameraManager));
 }
 
-void camera_manager_destroy(
-        CameraManager *mgr)
+void camera_manager_destroy(        CameraManager *mgr)
 {
     if (!mgr)
         return;
 
-    for (int i = 0;
-         i < mgr->camera_count;
-         i++)
+    for (int i = 0; i < mgr->camera_count; i++)
     {
         camera_destroy(mgr->cameras[i]);
         mgr->cameras[i] = NULL;
@@ -40,28 +36,19 @@ void camera_manager_destroy(
     free(mgr);
 }
 
-int camera_manager_add(
-        CameraManager *mgr,
-        Camera *cam)
+int camera_manager_add(CameraManager *mgr, Camera *cam)
 {
-    if (!mgr ||
-        !cam ||
-        mgr->camera_count >= MAX_CAMERA_COUNT)
+    if (!mgr || !cam || mgr->camera_count >= MAX_CAMERA_COUNT)
         return -1;
 
-    mgr->cameras[mgr->camera_count++] =
-        cam;
+    mgr->cameras[mgr->camera_count++] = cam;
 
     return 0;
 }
 
-Camera *camera_manager_get(
-        CameraManager *mgr,
-        int index)
+Camera *camera_manager_get(        CameraManager *mgr, int index)
 {
-    if (!mgr ||
-        index < 0 ||
-        index >= mgr->camera_count)
+    if (!mgr || index < 0 || index >= mgr->camera_count)
         return NULL;
 
     return mgr->cameras[index];

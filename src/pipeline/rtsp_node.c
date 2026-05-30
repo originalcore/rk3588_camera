@@ -17,14 +17,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int rtsp_process(
-    PipelineNode *node,
-    Frame *frame)
+static int rtsp_process(    PipelineNode *node,  Frame *frame)
 {
     (void)node;
 
-    printf("rtsp frame size=%zu\n",
-           frame->size);
+    printf("rtsp frame size=%zu\n", frame->size);
 
     return 0;
 }
@@ -39,8 +36,7 @@ PipelineNode *rtsp_node_create(void)
 {
     PipelineNode *node;
 
-    node = calloc(1,
-                  sizeof(*node));
+    node = calloc(1, sizeof(*node));
     if (!node)
         return NULL;
 

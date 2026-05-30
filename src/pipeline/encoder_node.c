@@ -17,20 +17,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int encoder_process(
-    PipelineNode *node,
-    Frame *frame)
+static int encoder_process(PipelineNode *node, Frame *frame)
 {
     (void)node;
 
-    printf("encoder frame size=%zu\n",
-           frame->size);
+    printf("encoder frame size=%zu\n", frame->size);
 
     return 0;
 }
 
-static void encoder_destroy(
-    PipelineNode *node)
+static void encoder_destroy(    PipelineNode *node)
 {
     free(node);
 }
@@ -39,8 +35,7 @@ PipelineNode *encoder_node_create(void)
 {
     PipelineNode *node;
 
-    node = calloc(1,
-                  sizeof(*node));
+    node = calloc(1, sizeof(*node));
     if (!node)
         return NULL;
 

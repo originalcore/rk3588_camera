@@ -14,15 +14,12 @@
 
 #include "pipeline.h"
 
-int pipeline_push_frame(
-    PipelineNode *node,
-    Frame *frame)
+int pipeline_push_frame(    PipelineNode *node,     Frame *frame)
 {
     while (node)
     {
 
-        if (!node->process ||
-            node->process(node, frame) < 0)
+        if (!node->process || node->process(node, frame) < 0)
             return -1;
 
         node = node->next;
@@ -31,8 +28,7 @@ int pipeline_push_frame(
     return 0;
 }
 
-void pipeline_destroy(
-    PipelineNode *node)
+void pipeline_destroy(PipelineNode *node)
 {
     while (node)
     {

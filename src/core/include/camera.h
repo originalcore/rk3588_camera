@@ -40,32 +40,21 @@ typedef struct
 
 } Camera;
 
-Camera *camera_create(
-    const char *dev);
+Camera *camera_create(    const char *dev);
 
-void camera_destroy(
-    Camera *cam);
+void camera_destroy(    Camera *cam);
 
-int camera_open(
-    Camera *cam,
-    const char *dev);
+int camera_open(    Camera *cam, const char *dev);
 
-int camera_start(
-    Camera *cam);
+int camera_start(    Camera *cam);
 
-int camera_poll(
-    Camera *cam);
+int camera_poll(    Camera *cam);
 
-int camera_add_listener(
-    Camera *cam,
-    FrameListener *listener);
+int camera_add_listener(    Camera *cam,     FrameListener *listener);
 
-int camera_set_pipeline(
-    Camera *cam,
-    PipelineNode *node);
+int camera_set_pipeline(    Camera *cam,     PipelineNode *node);
 
-void camera_close(
-    Camera *cam);
+void camera_close(Camera *cam);
 
 
 #ifdef __cplusplus

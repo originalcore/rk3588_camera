@@ -27,12 +27,9 @@ typedef struct PipelineNode PipelineNode;
 struct PipelineNode
 {
 
-    int (*process)(
-        PipelineNode *node,
-        Frame *frame);
+    int (*process)(PipelineNode *node, Frame *frame);
 
-    void (*destroy)(
-        PipelineNode *node);
+    void (*destroy)( PipelineNode *node);
 
     PipelineNode *next;
 

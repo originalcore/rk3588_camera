@@ -138,12 +138,14 @@ flowchart TD
     E --> F[frame_queue_push]
     F -->|queue full| F1[VIDIOC_QBUF and drop frame]
     F1 --> M[return 0]
-    F -->|queued| M
 
-    W[pipeline worker thread] --> Q[frame_queue_pop]
-    Q -->|empty| S[sleep briefly]
-    S --> W
-    Q -->|frame| G{pipeline exists?}
+    F -->|queued| TP[thread_pool_submit pipeline job]
+    TP -->|failed| F1
+    TP -->|success| M
+
+    W[ThreadPool worker] --> Q[frame_queue_pop]
+    Q -->|frame| EV[CAMERA_EVENT_FRAME_READY]
+    EV --> G{pipeline exists?}
     G -->|yes| H[pipeline_push_frame]
     G -->|no| L[camera_dispatch_frame]
 
@@ -152,8 +154,9 @@ flowchart TD
     J --> L
 
     L --> K[VIDIOC_QBUF]
-    K -->|failed| Z[set camera error]
-    K -->|success| W
+    K -->|failed| EL[CAMERA_EVENT_LOST]
+    EL --> Z[set camera error]
+    K -->|success| DONE[job done]
 ```
 
 ## 6. Pipeline Destroy Flow
@@ -184,7 +187,8 @@ flowchart LR
     CAM --> PL[pipeline]
     CAM --> FL[frame_listener]
     CAM --> FQ[FrameQueue]
-    CAM --> TH[CameraThread]
+    CAM --> TP[ThreadPool]
+    CAM --> EB[EventBus]
 
     PL --> PN[pipeline_node]
     CF --> ENC[encoder_node]
@@ -195,4 +199,5 @@ flowchart LR
     V4L2 --> FR[Frame]
     PN --> FR
     FL --> FR
+    EB --> EVT[CameraEvent]
 ```

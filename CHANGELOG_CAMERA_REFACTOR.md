@@ -390,23 +390,49 @@ Added key framework core modules for asynchronous frame processing:
 
 - `src/framework/core/include/buffer_queue.h`
 - `src/framework/core/buffer_queue.c`
-- `src/framework/core/include/thread.h`
-- `src/framework/core/thread.c`
-- `src/framework/core/include/message.h`
-- `src/framework/core/message.c`
 
 The camera processing path now separates capture from slow pipeline work:
 
 ```text
-capture -> FrameQueue -> pipeline worker thread -> encoder -> rtsp -> VIDIOC_QBUF
+capture -> FrameQueue -> worker -> encoder -> rtsp -> VIDIOC_QBUF
 ```
 
 Behavior changes:
 
 - `camera_poll()` now captures a frame and pushes it into `FrameQueue`.
-- A pipeline worker thread pops frames and runs `pipeline_push_frame()`.
 - V4L2 buffers are returned with `VIDIOC_QBUF` only after pipeline processing finishes.
 - If `FrameQueue` is full, the current frame is returned to V4L2 and dropped with a warning instead of blocking or stopping the camera.
+
+## 15. Thread Pool And Event Bus
+
+Added independent top-level framework modules:
+
+- `src/thread`
+  - `thread_pool.c`
+  - `worker.c`
+  - `include/thread_pool.h`
+  - `include/worker.h`
+- `src/message`
+  - `event_bus.c`
+  - `include/event_bus.h`
+
+The camera framework now uses a `ThreadPool` for asynchronous pipeline work instead of a camera-local thread wrapper. This keeps the architecture ready for future separation:
+
+```text
+capture thread
+encoder thread
+rtsp thread
+ai thread
+```
+
+Added Android Camera HAL-style events:
+
+- `CAMERA_EVENT_FRAME_READY`
+- `CAMERA_EVENT_LOST`
+- `CAMERA_EVENT_STREAM_ON`
+- `CAMERA_EVENT_STREAM_OFF`
+
+`Camera` owns an `EventBus` and publishes stream and frame events around capture and pipeline processing.
 
 These were not forced into the current change set because they affect broader design or runtime behavior:
 

@@ -52,6 +52,8 @@ ifeq (i386,$(ARCH))
 	CFLAGS += -I $(shell pwd)/src/hal/isp/include
 	CFLAGS += -I $(shell pwd)/src/hal/v4l2/include
 	CFLAGS += -I $(shell pwd)/src/utils/log/include
+	CFLAGS += -I $(shell pwd)/src/thread/include
+	CFLAGS += -I $(shell pwd)/src/message/include
 	CFLAGS += -I $(shell pwd)/3rdparty/zlog/src
 	LDFLAGS := -lm -lrt -ldl -lpthread
 endif

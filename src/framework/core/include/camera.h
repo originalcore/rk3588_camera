@@ -24,7 +24,8 @@ extern "C" {
 #include "frame_listener.h"
 #include "pipeline_node.h"
 #include "buffer_queue.h"
-#include "thread.h"
+#include "event_bus.h"
+#include "thread_pool.h"
 #include "v4l2_device.h"
 
 #define MAX_FRAME_LISTENER 16
@@ -63,9 +64,9 @@ typedef struct
 
     FrameQueue queue;
 
-    CameraThread pipeline_thread;
+    ThreadPool pipeline_pool;
 
-    int pipeline_thread_exit;
+    EventBus event_bus;
 
 } Camera;
 
@@ -95,6 +96,11 @@ int camera_add_listener(
 int camera_set_pipeline(
     Camera *cam,
     PipelineNode *node);
+
+int camera_subscribe_event(
+    Camera *cam,
+    CameraEventHandler handler,
+    void *user_data);
 
 void camera_close(
     Camera *cam);

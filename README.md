@@ -24,6 +24,8 @@ This project is a C camera framework skeleton based on V4L2 capture, a simple pi
 │   │   └── v4l2/            # V4L2 device wrapper
 │   ├── utils/
 │   │   └── log/             # zlog wrapper
+│   ├── thread/              # Thread pool and worker abstraction
+│   ├── message/             # Event bus and camera events
 │   ├── codec/               # Codec extension module placeholder
 │   ├── network/             # Network extension module placeholder
 │   └── ai/                  # AI extension module placeholder
@@ -55,10 +57,12 @@ The default target is built for the current Linux host with `ARCH=i386` in `Make
 The capture path uses an internal frame queue so slow encoder or network output does not block `camera_poll()` directly:
 
 ```text
-V4L2 capture -> FrameQueue -> pipeline thread -> encoder -> rtsp -> V4L2 queue
+V4L2 capture -> FrameQueue -> ThreadPool worker -> encoder -> rtsp -> V4L2 queue
 ```
 
-`FrameQueue` is defined in `src/framework/core/include/buffer_queue.h` with 32 frame slots. When the queue is full, the current frame is returned to V4L2 and dropped with a warning.
+`FrameQueue` is defined in `src/framework/core/include/buffer_queue.h` with 32 frame slots. Worker execution is provided by `src/thread`. Camera lifecycle and frame status notifications are published through `src/message` as events such as `CAMERA_EVENT_FRAME_READY`, `CAMERA_EVENT_LOST`, `CAMERA_EVENT_STREAM_ON`, and `CAMERA_EVENT_STREAM_OFF`.
+
+The current camera pipeline uses one worker in the pipeline pool. The module boundary is prepared so future capture, encoder, RTSP, and AI work can be split into independent worker pools or dedicated threads.
 
 ## Build
 

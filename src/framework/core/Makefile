@@ -13,6 +13,4 @@
 obj-y += camera.o
 obj-y += camera_manager.o
 obj-y += buffer_queue.o
-obj-y += thread.o
-obj-y += message.o
 obj-y += pipeline.o

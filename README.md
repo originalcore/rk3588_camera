@@ -145,6 +145,32 @@ Show command line help:
 ./bin/camera --help
 ```
 
+Supported command line options:
+
+```text
+--log-conf PATH  zlog config file path, default: conf/zlog.conf
+--device PATH    V4L2 device node, default: /dev/video0
+--help           show command line help
+```
+
+Example:
+
+```sh
+./bin/camera --log-conf conf/zlog.conf --device /dev/video0
+```
+
+If the selected device does not exist, the program exits with:
+
+```text
+failed to open camera device
+```
+
+Check available V4L2 devices:
+
+```sh
+ls -l /dev/video*
+```
+
 If deploying to another directory, keep this layout:
 
 ```text
@@ -321,7 +347,15 @@ The category name must remain `camera` unless `camera_log_init()` is changed.
 
 ## Camera Configuration
 
-Camera configuration is currently compiled into `src/app/main.c`.
+Camera configuration defaults are currently defined in `src/app/main.c`.
+
+The `device` field can be overridden at runtime:
+
+```sh
+./bin/camera --device /dev/video2
+```
+
+Other camera fields are still compiled into the default `CameraConfig`.
 
 Fields:
 
@@ -338,13 +372,13 @@ typedef struct
 
 Meaning:
 
-- `device`: V4L2 device node, for example `/dev/video0`
+- `device`: V4L2 device node, for example `/dev/video0`; can be overridden by `--device`
 - `width`: capture width
 - `height`: capture height
 - `pixfmt`: V4L2 pixel format, for example `V4L2_PIX_FMT_NV12`
 - `buffer_count`: number of MMAP buffers, maximum `MAX_BUFFER_COUNT`
 
-The current app does not yet parse camera settings from a file or CLI.
+The current app does not yet parse width, height, pixel format, or buffer count from a file or CLI.
 
 ## Runtime Notes
 

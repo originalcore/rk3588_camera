@@ -40,6 +40,12 @@ typedef struct
 
 } Camera;
 
+Camera *camera_create(
+    const char *dev);
+
+void camera_destroy(
+    Camera *cam);
+
 int camera_open(
     Camera *cam,
     const char *dev);

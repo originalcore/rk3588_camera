@@ -15,6 +15,7 @@
 #include "pipeline_node.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 static int rtsp_process(
     PipelineNode *node,
@@ -28,13 +29,24 @@ static int rtsp_process(
     return 0;
 }
 
-PipelineNode *rtsp_node_create()
+static void rtsp_destroy(
+    PipelineNode *node)
 {
-    static PipelineNode node;
+    free(node);
+}
 
-    node.process = rtsp_process;
+PipelineNode *rtsp_node_create(void)
+{
+    PipelineNode *node;
 
-    node.next = NULL;
+    node = calloc(1,
+                  sizeof(*node));
+    if (!node)
+        return NULL;
 
-    return &node;
+    node->process = rtsp_process;
+
+    node->destroy = rtsp_destroy;
+
+    return node;
 }

@@ -33,6 +33,11 @@ typedef struct
 
 } CameraManager;
 
+CameraManager *camera_manager_create(void);
+
+void camera_manager_destroy(
+    CameraManager *mgr);
+
 int camera_manager_add(
     CameraManager *mgr,
     Camera *cam);
@@ -46,4 +51,3 @@ Camera *camera_manager_get(
 }
 #endif /* __cplusplus */
 #endif
-

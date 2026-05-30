@@ -12,8 +12,8 @@
 *******************************************************************************/
 /*@{*/
 
-#ifndef __IPELINE_NODE_FACTORY_H_
-#define __IPELINE_NODE_FACTORY_H_
+#ifndef __PIPELINE_NODE_FACTORY_H_
+#define __PIPELINE_NODE_FACTORY_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,13 +21,12 @@ extern "C" {
 
 #include "pipeline_node.h"
 
-PipelineNode *encoder_node_create();
+PipelineNode *encoder_node_create(void);
 
-PipelineNode *rtsp_node_create();
+PipelineNode *rtsp_node_create(void);
 
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif
-

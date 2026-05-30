@@ -26,9 +26,11 @@ int pipeline_push_frame(
     PipelineNode *node,
     Frame *frame);
 
+void pipeline_destroy(
+    PipelineNode *node);
+
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif
-

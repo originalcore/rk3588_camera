@@ -14,6 +14,32 @@
 
 #include "camera_manager.h"
 
+#include <stdlib.h>
+
+CameraManager *camera_manager_create(void)
+{
+    return calloc(1,
+                  sizeof(CameraManager));
+}
+
+void camera_manager_destroy(
+        CameraManager *mgr)
+{
+    if (!mgr)
+        return;
+
+    for (int i = 0;
+         i < mgr->camera_count;
+         i++)
+    {
+        camera_destroy(mgr->cameras[i]);
+        mgr->cameras[i] = NULL;
+    }
+
+    mgr->camera_count = 0;
+    free(mgr);
+}
+
 int camera_manager_add(
         CameraManager *mgr,
         Camera *cam)

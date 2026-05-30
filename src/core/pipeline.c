@@ -30,3 +30,19 @@ int pipeline_push_frame(
 
     return 0;
 }
+
+void pipeline_destroy(
+    PipelineNode *node)
+{
+    while (node)
+    {
+        PipelineNode *next = node->next;
+
+        node->next = NULL;
+
+        if (node->destroy)
+            node->destroy(node);
+
+        node = next;
+    }
+}

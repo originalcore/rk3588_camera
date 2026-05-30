@@ -31,6 +31,9 @@ struct PipelineNode
         PipelineNode *node,
         Frame *frame);
 
+    void (*destroy)(
+        PipelineNode *node);
+
     PipelineNode *next;
 
     void *private_data;
@@ -42,4 +45,3 @@ struct PipelineNode
 }
 #endif /* __cplusplus */
 #endif
-

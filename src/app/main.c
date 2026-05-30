@@ -14,6 +14,7 @@
 
 #include "camera.h"
 #include "camera_manager.h"
+#include "pipeline.h"
 #include "pipeline_node_factory.h"
 
 #include <stdio.h>
@@ -21,9 +22,9 @@
 
 int main(int argc, char *argv[])
 {
-    CameraManager mgr = {0};
+    CameraManager *mgr;
 
-    Camera front_cam = {0};
+    Camera *front_cam;
 
     PipelineNode *encoder;
 
@@ -32,43 +33,71 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    if (camera_open(&front_cam,
-                    "/dev/video0") < 0)
+    mgr = camera_manager_create();
+    if (!mgr)
     {
         fprintf(stderr,
-                "failed to open camera device\n");
+                "failed to create camera manager\n");
         return 1;
     }
 
-    if (camera_start(&front_cam) < 0)
+    front_cam = camera_create("/dev/video0");
+    if (!front_cam)
+    {
+        fprintf(stderr,
+                "failed to open camera device\n");
+        camera_manager_destroy(mgr);
+        return 1;
+    }
+
+    if (camera_start(front_cam) < 0)
     {
         fprintf(stderr,
                 "failed to start camera device\n");
-        camera_close(&front_cam);
+        camera_destroy(front_cam);
+        camera_manager_destroy(mgr);
         return 1;
     }
 
     encoder = encoder_node_create();
     rtsp = rtsp_node_create();
+    if (!encoder ||
+        !rtsp)
+    {
+        fprintf(stderr,
+                "failed to create pipeline nodes\n");
+        pipeline_destroy(encoder);
+        pipeline_destroy(rtsp);
+        camera_destroy(front_cam);
+        camera_manager_destroy(mgr);
+        return 1;
+    }
 
     encoder->next = rtsp;
 
-    camera_set_pipeline(&front_cam,
+    camera_set_pipeline(front_cam,
                         encoder);
 
-    if (camera_manager_add(&mgr,
-                           &front_cam) < 0)
+    if (camera_manager_add(mgr,
+                           front_cam) < 0)
     {
         fprintf(stderr,
                 "failed to add camera\n");
-        camera_close(&front_cam);
+        camera_destroy(front_cam);
+        camera_manager_destroy(mgr);
         return 1;
     }
+
+    front_cam = NULL;
 
     while (1)
     {
 
-        if (camera_poll(&front_cam) < 0)
+        Camera *cam = camera_manager_get(mgr,
+                                         0);
+
+        if (!cam ||
+            camera_poll(cam) < 0)
         {
             fprintf(stderr,
                     "failed to poll camera\n");
@@ -76,7 +105,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    camera_close(&front_cam);
+    camera_manager_destroy(mgr);
 
     return 0;
 }

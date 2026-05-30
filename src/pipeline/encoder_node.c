@@ -15,6 +15,7 @@
 #include "pipeline_node.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 static int encoder_process(
     PipelineNode *node,
@@ -28,13 +29,24 @@ static int encoder_process(
     return 0;
 }
 
-PipelineNode *encoder_node_create()
+static void encoder_destroy(
+    PipelineNode *node)
 {
-    static PipelineNode node;
+    free(node);
+}
 
-    node.process = encoder_process;
+PipelineNode *encoder_node_create(void)
+{
+    PipelineNode *node;
 
-    node.next = NULL;
+    node = calloc(1,
+                  sizeof(*node));
+    if (!node)
+        return NULL;
 
-    return &node;
+    node->process = encoder_process;
+
+    node->destroy = encoder_destroy;
+
+    return node;
 }

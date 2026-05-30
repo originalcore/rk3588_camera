@@ -47,7 +47,8 @@ static void print_usage(
 static int parse_args(
     int argc,
     char *argv[],
-    AppConfig *app_config)
+    AppConfig *app_config,
+    const char **error)
 {
     app_config->log_conf = "conf/zlog.conf";
     app_config->camera.device = "/dev/video0";
@@ -60,15 +61,25 @@ static int parse_args(
     {
         if (strcmp(argv[i], "--log-conf") == 0)
         {
-            if (++i >= argc)
+            if (++i >= argc ||
+                argv[i][0] == '\0' ||
+                argv[i][0] == '-')
+            {
+                *error = "--log-conf requires a config file path";
                 return -1;
+            }
 
             app_config->log_conf = argv[i];
         }
         else if (strcmp(argv[i], "--device") == 0)
         {
-            if (++i >= argc)
+            if (++i >= argc ||
+                argv[i][0] == '\0' ||
+                argv[i][0] == '-')
+            {
+                *error = "--device requires a V4L2 device path";
                 return -1;
+            }
 
             app_config->camera.device = argv[i];
         }
@@ -79,6 +90,7 @@ static int parse_args(
         }
         else
         {
+            *error = "unknown argument";
             return -1;
         }
     }
@@ -98,15 +110,21 @@ int main(int argc, char *argv[])
 
     AppConfig app_config;
 
+    const char *arg_error = NULL;
+
     int ret;
 
     ret = parse_args(argc,
                      argv,
-                     &app_config);
+                     &app_config,
+                     &arg_error);
     if (ret > 0)
         return 0;
     if (ret < 0)
     {
+        if (arg_error)
+            fprintf(stderr, "Error: %s\n", arg_error);
+
         print_usage(argv[0]);
         return 1;
     }

@@ -153,6 +153,14 @@ Supported command line options:
 --help           show command line help
 ```
 
+Invalid arguments return non-zero and print an error plus usage. Examples:
+
+```text
+Error: unknown argument
+Error: --log-conf requires a config file path
+Error: --device requires a V4L2 device path
+```
+
 Example:
 
 ```sh

@@ -1,0 +1,6 @@
+*.o
+*.d
+built-in.o
+bin/
+version/
+.git-repo/

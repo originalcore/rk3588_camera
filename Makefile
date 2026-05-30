@@ -44,7 +44,15 @@ CFLAGS := -Wall -O2 -g -I $(shell pwd)/version
 CFLAGS += -DCAMERA_FRAMEWORK_BUILD=1
 
 ifeq (i386,$(ARCH))
-	CFLAGS += -I $(shell pwd)/src/app/include -I $(shell pwd)//src/callback/include -I $(shell pwd)//src/core/include  -I $(shell pwd)//src/dma/include  -I $(shell pwd)/src/isp/include  -I $(shell pwd)/src/log/include  -I $(shell pwd)/src/pipeline/include -I $(shell pwd)/src/v4l2/include -I $(shell pwd)/3rdparty/zlog/src
+	CFLAGS += -I $(shell pwd)/src/app/include
+	CFLAGS += -I $(shell pwd)/src/framework/callback/include
+	CFLAGS += -I $(shell pwd)/src/framework/core/include
+	CFLAGS += -I $(shell pwd)/src/framework/pipeline/include
+	CFLAGS += -I $(shell pwd)/src/hal/dma/include
+	CFLAGS += -I $(shell pwd)/src/hal/isp/include
+	CFLAGS += -I $(shell pwd)/src/hal/v4l2/include
+	CFLAGS += -I $(shell pwd)/src/utils/log/include
+	CFLAGS += -I $(shell pwd)/3rdparty/zlog/src
 	LDFLAGS := -lm -lrt -ldl -lpthread
 endif
 

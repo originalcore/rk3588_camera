@@ -20,7 +20,7 @@ Changes:
   - `h264_encoder_node_create()` was replaced with `encoder_node_create()`.
   - `camera_manager_add_camera()` was replaced with `camera_manager_add()`.
 - Removed direct use of `camera_set_format()` from `main.c`; camera format setup belongs to `camera_open()` in the current architecture.
-- Added standard type includes to `src/core/include/frame.h`:
+- Added standard type includes to `src/framework/core/include/frame.h`:
   - `<stddef.h>`
   - `<stdint.h>`
 
@@ -28,7 +28,7 @@ Changes:
 
 Several files were incomplete or had incorrect content that prevented compilation.
 
-### `src/pipeline/rtsp_node.c`
+### `src/framework/pipeline/rtsp_node.c`
 
 The file was truncated at an incomplete function declaration.
 
@@ -38,7 +38,7 @@ Changes:
 - Added `rtsp_node_create()`.
 - Matched the existing `PipelineNode` processing model used by `encoder_node.c`.
 
-### `src/v4l2/v4l2_device.c`
+### `src/hal/v4l2/v4l2_device.c`
 
 The file was missing the beginning of the V4L2 implementation.
 
@@ -56,7 +56,7 @@ Changes:
   - `v4l2_device_set_format()`
 - Kept buffer request, stream start, capture, and queue responsibilities in this module.
 
-### `src/v4l2/media_controller.c`
+### `src/hal/v4l2/media_controller.c`
 
 The file contained duplicated and incomplete V4L2 buffer logic that belonged in `v4l2_device.c`.
 
@@ -68,7 +68,7 @@ Changes:
   - `media_controller_setup_link()`
 - Removed duplicated V4L2 capture functions from this module.
 
-### `src/v4l2/include/media_controller.h`
+### `src/hal/v4l2/include/media_controller.h`
 
 Changes:
 
@@ -101,7 +101,7 @@ Changes:
 
 ## 4. V4L2 Resource Handling Improvements
 
-Changes in `src/v4l2/v4l2_device.c` and `src/v4l2/include/v4l2_device.h`:
+Changes in `src/hal/v4l2/v4l2_device.c` and `src/hal/v4l2/include/v4l2_device.h`:
 
 - Added `v4l2_device_close()`.
 - Added internal buffer cleanup helper.
@@ -130,8 +130,8 @@ A second refactor introduced explicit ownership and destroy paths.
 
 Files:
 
-- `src/core/include/camera_manager.h`
-- `src/core/camera_manager.c`
+- `src/framework/core/include/camera_manager.h`
+- `src/framework/core/camera_manager.c`
 
 Added:
 
@@ -146,8 +146,8 @@ Behavior:
 
 Files:
 
-- `src/core/include/camera.h`
-- `src/core/camera.c`
+- `src/framework/core/include/camera.h`
+- `src/framework/core/camera.c`
 
 Added:
 
@@ -165,9 +165,9 @@ Behavior:
 
 Files:
 
-- `src/core/include/pipeline.h`
-- `src/core/pipeline.c`
-- `src/pipeline/include/pipeline_node.h`
+- `src/framework/core/include/pipeline.h`
+- `src/framework/core/pipeline.c`
+- `src/framework/pipeline/include/pipeline_node.h`
 
 Added:
 
@@ -182,9 +182,9 @@ Behavior:
 
 Files:
 
-- `src/pipeline/encoder_node.c`
-- `src/pipeline/rtsp_node.c`
-- `src/pipeline/include/pipeline_node_factory.h`
+- `src/framework/pipeline/encoder_node.c`
+- `src/framework/pipeline/rtsp_node.c`
+- `src/framework/pipeline/include/pipeline_node_factory.h`
 
 Changes:
 
@@ -261,25 +261,28 @@ Additional warning-oriented syntax check:
 gcc -Wall -Wextra \
     -I version \
     -I src/app/include \
-    -I src/callback/include \
-    -I src/core/include \
-    -I src/dma/include \
-    -I src/isp/include \
-    -I src/pipeline/include \
-    -I src/v4l2/include \
+    -I src/framework/callback/include \
+    -I src/framework/core/include \
+    -I src/framework/pipeline/include \
+    -I src/hal/dma/include \
+    -I src/hal/isp/include \
+    -I src/hal/v4l2/include \
+    -I src/utils/log/include \
+    -I 3rdparty/zlog/src \
     -fsyntax-only \
     src/app/main.c \
-    src/callback/frame_listener.c \
-    src/core/camera.c \
-    src/core/camera_manager.c \
-    src/core/pipeline.c \
-    src/dma/dmabuf_allocator.c \
-    src/isp/rkisp_bridge.c \
-    src/pipeline/capture_node.c \
-    src/pipeline/encoder_node.c \
-    src/pipeline/rtsp_node.c \
-    src/v4l2/v4l2_device.c \
-    src/v4l2/media_controller.c
+    src/framework/callback/frame_listener.c \
+    src/framework/core/camera.c \
+    src/framework/core/camera_manager.c \
+    src/framework/core/pipeline.c \
+    src/hal/dma/dmabuf_allocator.c \
+    src/hal/isp/rkisp_bridge.c \
+    src/utils/log/camera_log.c \
+    src/framework/pipeline/capture_node.c \
+    src/framework/pipeline/encoder_node.c \
+    src/framework/pipeline/rtsp_node.c \
+    src/hal/v4l2/v4l2_device.c \
+    src/hal/v4l2/media_controller.c
 ```
 
 Result:
@@ -328,9 +331,9 @@ Changes:
 - Added zlog source under `3rdparty/zlog`.
 - Added `3rdparty/Makefile` so third-party code participates in the existing recursive build.
 - Added `3rdparty/zlog/src/Makefile.camera` to compile zlog library objects into the project without building zlog's command-line tools.
-- Added `src/log` module:
-  - `src/log/include/camera_log.h`
-  - `src/log/camera_log.c`
+- Added `src/utils/log` module:
+  - `src/utils/log/include/camera_log.h`
+  - `src/utils/log/camera_log.c`
 - Added `conf/zlog.conf`.
 - Replaced application `printf/fprintf` logging with `CAMERA_LOG_*` macros backed by zlog.
 - Replaced encoder and RTSP node debug prints with zlog debug logs.
@@ -355,11 +358,31 @@ Fixed issues found during code review:
 
 - `main.c` now creates and attaches the pipeline before calling `camera_start()`.
 - `main.c` now checks the return value of `camera_set_pipeline()`.
-- Removed duplicate `v4l2_device.o` from `src/v4l2/Makefile`.
+- Removed duplicate `v4l2_device.o` from `src/hal/v4l2/Makefile`.
 - Added `V4L2Device.streaming` to track stream state.
 - `v4l2_device_start()` is now idempotent when already streaming.
 - `v4l2_device_stop()` now skips `VIDIOC_STREAMOFF` when the device is not streaming.
 - `v4l2_device_close()` only stops streaming when the streaming flag is set.
+
+## 13. Source Directory Reorganization
+
+Adjusted the source tree to separate framework, hardware abstraction, and utility responsibilities:
+
+- Moved framework-level modules under `src/framework/`:
+  - `callback`
+  - `core`
+  - `pipeline`
+- Moved hardware-facing modules under `src/hal/`:
+  - `dma`
+  - `isp`
+  - `v4l2`
+- Moved logging utility code under `src/utils/log`.
+- Added extension module directories:
+  - `src/codec`
+  - `src/network`
+  - `src/ai`
+- Updated recursive module Makefiles and top-level include paths.
+- Added minimal module placeholders for codec, network, and AI so the current recursive build system can build non-empty module directories.
 
 These were not forced into the current change set because they affect broader design or runtime behavior:
 

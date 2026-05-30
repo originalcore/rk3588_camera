@@ -14,13 +14,19 @@ This project is a C camera framework skeleton based on V4L2 capture, a simple pi
 ├── logs/                    # Runtime log directory
 ├── src/
 │   ├── app/                 # Application entry
-│   ├── callback/            # Frame listener abstraction
-│   ├── core/                # Camera, manager, pipeline core
-│   ├── dma/                 # DMA buffer abstraction placeholder
-│   ├── isp/                 # ISP bridge placeholder
-│   ├── log/                 # zlog wrapper
-│   ├── pipeline/            # Pipeline node implementations
-│   └── v4l2/                # V4L2 device wrapper
+│   ├── framework/           # Framework layer
+│   │   ├── callback/        # Frame listener abstraction
+│   │   ├── core/            # Camera, manager, pipeline core
+│   │   └── pipeline/        # Pipeline node implementations
+│   ├── hal/                 # Hardware abstraction layer
+│   │   ├── dma/             # DMA buffer abstraction placeholder
+│   │   ├── isp/             # ISP bridge placeholder
+│   │   └── v4l2/            # V4L2 device wrapper
+│   ├── utils/
+│   │   └── log/             # zlog wrapper
+│   ├── codec/               # Codec extension module placeholder
+│   ├── network/             # Network extension module placeholder
+│   └── ai/                  # AI extension module placeholder
 └── 3rdparty/
     └── zlog/                # Vendored zlog source
 ```
@@ -205,8 +211,8 @@ camera_log_init("conf/zlog.conf");
 The wrapper lives in:
 
 ```text
-src/log/include/camera_log.h
-src/log/camera_log.c
+src/utils/log/include/camera_log.h
+src/utils/log/camera_log.c
 ```
 
 Use these macros in project code:

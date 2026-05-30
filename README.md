@@ -1,0 +1,353 @@
+# Camera Framework
+
+This project is a C camera framework skeleton based on V4L2 capture, a simple pipeline model, and zlog-based logging.
+
+## Directory Layout
+
+```text
+.
+├── Makefile                 # Top-level build entry
+├── Makefile.build           # Recursive object build rule
+├── bin/                     # Build output directory
+├── conf/
+│   └── zlog.conf            # Runtime logging configuration
+├── logs/                    # Runtime log directory
+├── src/
+│   ├── app/                 # Application entry
+│   ├── callback/            # Frame listener abstraction
+│   ├── core/                # Camera, manager, pipeline core
+│   ├── dma/                 # DMA buffer abstraction placeholder
+│   ├── isp/                 # ISP bridge placeholder
+│   ├── log/                 # zlog wrapper
+│   ├── pipeline/            # Pipeline node implementations
+│   └── v4l2/                # V4L2 device wrapper
+└── 3rdparty/
+    └── zlog/                # Vendored zlog source
+```
+
+## Build Requirements
+
+Required tools:
+
+```sh
+gcc
+make
+ld
+ar
+```
+
+Required Linux headers:
+
+```text
+linux/videodev2.h
+```
+
+The default target is built for the current Linux host with `ARCH=i386` in `Makefile`. The build currently uses the host `gcc` unless `CROSS_COMPILE` is configured.
+
+## Build
+
+From the project root:
+
+```sh
+make
+```
+
+Expected success output:
+
+```text
+camera run in i386 platform compiled success.
+```
+
+Generated binary:
+
+```text
+bin/camera
+```
+
+Generated version header:
+
+```text
+version/version.h
+```
+
+## Clean
+
+Basic clean:
+
+```sh
+make clean
+```
+
+Full clean:
+
+```sh
+make distclean
+```
+
+Note: the current `clean` rule is basic. If stale object files remain, use:
+
+```sh
+find . -name "*.o" -o -name "*.d" -o -name "built-in.o"
+```
+
+and remove stale build artifacts as needed.
+
+## Deployment
+
+Deploy at least these files/directories together:
+
+```text
+bin/camera
+conf/zlog.conf
+logs/
+```
+
+The application currently opens:
+
+```text
+/dev/video0
+```
+
+The camera parameters are currently configured in `src/app/main.c`:
+
+```c
+CameraConfig config = {
+    .device = "/dev/video0",
+    .width = 1920,
+    .height = 1080,
+    .pixfmt = V4L2_PIX_FMT_NV12,
+    .buffer_count = 4,
+};
+```
+
+Before running, make sure:
+
+```sh
+test -e /dev/video0
+mkdir -p logs
+```
+
+Run from the project root so the relative config path can be found:
+
+```sh
+./bin/camera
+```
+
+If deploying to another directory, keep this layout:
+
+```text
+deploy-root/
+├── bin/camera
+├── conf/zlog.conf
+└── logs/
+```
+
+Run from `deploy-root`:
+
+```sh
+./bin/camera
+```
+
+## Logging
+
+Logging is implemented with zlog. The application initializes logging with:
+
+```c
+camera_log_init("conf/zlog.conf");
+```
+
+The wrapper lives in:
+
+```text
+src/log/include/camera_log.h
+src/log/camera_log.c
+```
+
+Use these macros in project code:
+
+```c
+CAMERA_LOG_DEBUG("message");
+CAMERA_LOG_INFO("message");
+CAMERA_LOG_WARN("message");
+CAMERA_LOG_ERROR("message");
+CAMERA_LOG_FATAL("message");
+```
+
+## zlog Configuration
+
+Runtime logging config:
+
+```text
+conf/zlog.conf
+```
+
+Current config:
+
+```text
+[global]
+strict init = true
+buffer min = 1024
+buffer max = 2MB
+rotate lock file = self
+default format = "%d(%F %T.%l) %-6V [%p] %c %f:%L - %m%n"
+
+[formats]
+normal = "%d(%F %T.%l) %-6V [%p] %c %f:%L - %m%n"
+
+[rules]
+camera.DEBUG >stdout; normal
+camera.DEBUG "logs/camera.log", 10MB * 5; normal
+```
+
+### `[global]`
+
+`strict init = true`
+
+Requires all referenced categories and rules to initialize correctly. If the config is invalid, `camera_log_init()` fails and the application exits.
+
+`buffer min = 1024`
+
+Minimum internal log buffer size.
+
+`buffer max = 2MB`
+
+Maximum internal log buffer size.
+
+`rotate lock file = self`
+
+Uses zlog's internal/self lock behavior for log rotation.
+
+`default format = "..."`
+
+Default log output format if a rule does not specify another format.
+
+### `[formats]`
+
+Defines named log formats.
+
+Current format:
+
+```text
+normal = "%d(%F %T.%l) %-6V [%p] %c %f:%L - %m%n"
+```
+
+Meaning:
+
+- `%d(%F %T.%l)`: timestamp with date, time, and milliseconds
+- `%-6V`: log level, left aligned
+- `%p`: process id
+- `%c`: zlog category
+- `%f:%L`: source file and line number
+- `%m`: log message
+- `%n`: newline
+
+### `[rules]`
+
+Rules decide which category and level go to which output.
+
+Current stdout rule:
+
+```text
+camera.DEBUG >stdout; normal
+```
+
+Meaning:
+
+- Category: `camera`
+- Minimum level: `DEBUG`
+- Output: stdout
+- Format: `normal`
+
+Current file rule:
+
+```text
+camera.DEBUG "logs/camera.log", 10MB * 5; normal
+```
+
+Meaning:
+
+- Category: `camera`
+- Minimum level: `DEBUG`
+- Output file: `logs/camera.log`
+- Rotate when file reaches `10MB`
+- Keep `5` rotated log files
+- Format: `normal`
+
+## Configure Log Level
+
+Change the level in `conf/zlog.conf`.
+
+For verbose debug logs:
+
+```text
+camera.DEBUG >stdout; normal
+camera.DEBUG "logs/camera.log", 10MB * 5; normal
+```
+
+For normal production info logs:
+
+```text
+camera.INFO >stdout; normal
+camera.INFO "logs/camera.log", 10MB * 5; normal
+```
+
+For warnings and errors only:
+
+```text
+camera.WARN >stdout; normal
+camera.WARN "logs/camera.log", 10MB * 5; normal
+```
+
+For errors only:
+
+```text
+camera.ERROR >stdout; normal
+camera.ERROR "logs/camera.log", 10MB * 5; normal
+```
+
+The category name must remain `camera` unless `camera_log_init()` is changed.
+
+## Camera Configuration
+
+Camera configuration is currently compiled into `src/app/main.c`.
+
+Fields:
+
+```c
+typedef struct
+{
+    const char *device;
+    int width;
+    int height;
+    unsigned int pixfmt;
+    int buffer_count;
+} CameraConfig;
+```
+
+Meaning:
+
+- `device`: V4L2 device node, for example `/dev/video0`
+- `width`: capture width
+- `height`: capture height
+- `pixfmt`: V4L2 pixel format, for example `V4L2_PIX_FMT_NV12`
+- `buffer_count`: number of MMAP buffers, maximum `MAX_BUFFER_COUNT`
+
+The current app does not yet parse camera settings from a file or CLI.
+
+## Runtime Notes
+
+- The process must have permission to open the V4L2 device node.
+- The device must support `V4L2_CAP_VIDEO_CAPTURE`.
+- The device must support `V4L2_CAP_STREAMING`.
+- The requested pixel format and resolution must be supported by the device or driver.
+- The current encoder and RTSP nodes are framework placeholders; they log frame sizes but do not encode or stream media yet.
+
+## Git Notes
+
+In this environment, the standard `.git` path is mounted read-only. This project uses a separate git directory:
+
+```sh
+GIT_DIR=.git-repo GIT_WORK_TREE=. git status
+GIT_DIR=.git-repo GIT_WORK_TREE=. git log --oneline
+```
+

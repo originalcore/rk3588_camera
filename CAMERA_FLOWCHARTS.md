@@ -191,6 +191,11 @@ flowchart LR
     CAM --> TP[ThreadPool]
     CAM --> EB[EventBus]
     V4L2 --> DMA[hal/dma DMA-BUF helpers]
+    V4L2 --> ISP[hal/isp rkisp_bridge]
+    ISP --> SENSOR[sensor_manager]
+    ISP --> MG[media_graph]
+    ISP --> AIQ[aiq_controller]
+    ISP --> HDR[hdr_controller]
 
     PL --> PN[pipeline_node]
     CF --> ENC[encoder_node]

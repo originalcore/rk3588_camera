@@ -20,7 +20,7 @@ This project is a C camera framework skeleton based on V4L2 capture, a simple pi
 │   │   └── pipeline/        # Pipeline node implementations
 │   ├── hal/                 # Hardware abstraction layer
 │   │   ├── dma/             # DMA heap and DMA-BUF fd sharing helpers
-│   │   ├── isp/             # ISP bridge placeholder
+│   │   ├── isp/             # Sensor, media graph, RKISP, AIQ, HDR control
 │   │   └── v4l2/            # V4L2 device wrapper
 │   ├── utils/
 │   │   └── log/             # zlog wrapper
@@ -86,6 +86,15 @@ typedef struct {
 ```
 
 The current V4L2 path still uses MMAP buffers, so it sets `dma_fd = -1` and fills `vaddr`. The DMA HAL already provides `dma_heap`, `dmabuf_export`, `dmabuf_import`, and `dmabuf_sync` modules for the RK3588-style V4L2/RGA/MPP/RKNN shared-fd path.
+
+The ISP HAL is split so sensor-specific work does not leak into the framework:
+
+```text
+sensor manager -> media graph -> rkisp bridge -> aiq controller
+                                -> hdr controller
+```
+
+Sensor models such as OV13855, IMX415, and IMX462 should be selected through `SensorConfig` and media entity configuration instead of changing the framework code.
 
 ## Build
 

@@ -503,6 +503,33 @@ frame->vaddr = dev->buffers[index].start;
 
 This keeps the framework buildable now while preparing the frame contract for V4L2, RGA, MPP, and RKNN shared fd pipelines.
 
+## 18. ISP HAL Split
+
+Expanded the ISP HAL from a single `rkisp_bridge.c` placeholder into separate responsibilities:
+
+- `src/hal/isp/rkisp_bridge.c`
+- `src/hal/isp/media_graph.c`
+- `src/hal/isp/sensor_manager.c`
+- `src/hal/isp/aiq_controller.c`
+- `src/hal/isp/hdr_controller.c`
+
+Added corresponding headers under `src/hal/isp/include/`.
+
+The intended RK3588 camera path is now represented as:
+
+```text
+sensor -> media graph -> rkisp -> rkaiq
+```
+
+`RkispBridge` composes:
+
+- `SensorManager`
+- `MediaGraph`
+- `AiqController`
+- `HdrController`
+
+Sensor-specific values are carried by `SensorConfig` and `MediaGraphConfig`, so adding OV13855, IMX415, IMX462, or another sensor should not require changing framework-level code.
+
 These were not forced into the current change set because they affect broader design or runtime behavior:
 
 - Add a real RTSP implementation or rename the current RTSP node to a debug/output node.

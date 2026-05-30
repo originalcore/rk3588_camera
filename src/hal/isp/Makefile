@@ -10,5 +10,9 @@
 #************************************************************************/#
 # /*@{*/
 
+obj-y += media_graph.o
+obj-y += sensor_manager.o
+obj-y += aiq_controller.o
+obj-y += hdr_controller.o
 obj-y += rkisp_bridge.o
 

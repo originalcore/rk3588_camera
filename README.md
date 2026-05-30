@@ -127,10 +127,22 @@ test -e /dev/video0
 mkdir -p logs
 ```
 
-Run from the project root so the relative config path can be found:
+Run from the project root:
 
 ```sh
 ./bin/camera
+```
+
+You can also specify the log config and camera device explicitly:
+
+```sh
+./bin/camera --log-conf conf/zlog.conf --device /dev/video0
+```
+
+Show command line help:
+
+```sh
+./bin/camera --help
 ```
 
 If deploying to another directory, keep this layout:
@@ -145,7 +157,7 @@ deploy-root/
 Run from `deploy-root`:
 
 ```sh
-./bin/camera
+./bin/camera --log-conf conf/zlog.conf --device /dev/video0
 ```
 
 ## Logging
@@ -350,4 +362,3 @@ In this environment, the standard `.git` path is mounted read-only. This project
 GIT_DIR=.git-repo GIT_WORK_TREE=. git status
 GIT_DIR=.git-repo GIT_WORK_TREE=. git log --oneline
 ```
-

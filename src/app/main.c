@@ -20,9 +20,70 @@
 #include "pipeline_node_factory.h"
 
 #include <linux/videodev2.h>
+#include <stdio.h>
+#include <string.h>
+
+typedef struct
+{
+    const char *log_conf;
+    CameraConfig camera;
+} AppConfig;
+
 static void print_version(void)
 {
     CAMERA_LOG_INFO("%s", version_string);
+}
+
+static void print_usage(
+    const char *program)
+{
+    printf("Usage: %s [--log-conf PATH] [--device PATH]\n",
+           program);
+    printf("  --log-conf PATH  zlog config file path, default: conf/zlog.conf\n");
+    printf("  --device PATH    V4L2 device node, default: /dev/video0\n");
+    printf("  --help           show this help\n");
+}
+
+static int parse_args(
+    int argc,
+    char *argv[],
+    AppConfig *app_config)
+{
+    app_config->log_conf = "conf/zlog.conf";
+    app_config->camera.device = "/dev/video0";
+    app_config->camera.width = 1920;
+    app_config->camera.height = 1080;
+    app_config->camera.pixfmt = V4L2_PIX_FMT_NV12;
+    app_config->camera.buffer_count = 4;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--log-conf") == 0)
+        {
+            if (++i >= argc)
+                return -1;
+
+            app_config->log_conf = argv[i];
+        }
+        else if (strcmp(argv[i], "--device") == 0)
+        {
+            if (++i >= argc)
+                return -1;
+
+            app_config->camera.device = argv[i];
+        }
+        else if (strcmp(argv[i], "--help") == 0)
+        {
+            print_usage(argv[0]);
+            return 1;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -35,18 +96,22 @@ int main(int argc, char *argv[])
 
     PipelineNode *rtsp;
 
-    CameraConfig config = {
-        .device = "/dev/video0",
-        .width = 1920,
-        .height = 1080,
-        .pixfmt = V4L2_PIX_FMT_NV12,
-        .buffer_count = 4,
-    };
+    AppConfig app_config;
 
-    (void)argc;
-    (void)argv;
+    int ret;
 
-    if (camera_log_init("conf/zlog.conf") < 0)
+    ret = parse_args(argc,
+                     argv,
+                     &app_config);
+    if (ret > 0)
+        return 0;
+    if (ret < 0)
+    {
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    if (camera_log_init(app_config.log_conf) < 0)
         return 1;
 
     mgr = camera_manager_create();
@@ -59,7 +124,7 @@ int main(int argc, char *argv[])
 
     print_version();
 
-    front_cam = camera_create(&config);
+    front_cam = camera_create(&app_config.camera);
     if (!front_cam)
     {
         CAMERA_LOG_ERROR("failed to open camera device");

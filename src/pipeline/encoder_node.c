@@ -17,7 +17,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int encoder_process(PipelineNode *node, Frame *frame)
+static int encoder_start(
+    PipelineNode *node)
+{
+    (void)node;
+
+    return 0;
+}
+
+static int encoder_stop(
+    PipelineNode *node)
+{
+    (void)node;
+
+    return 0;
+}
+
+static int encoder_process(
+    PipelineNode *node,
+    Frame *frame)
 {
     (void)node;
 
@@ -26,7 +44,8 @@ static int encoder_process(PipelineNode *node, Frame *frame)
     return 0;
 }
 
-static void encoder_destroy(    PipelineNode *node)
+static void encoder_destroy(
+    PipelineNode *node)
 {
     free(node);
 }
@@ -39,8 +58,9 @@ PipelineNode *encoder_node_create(void)
     if (!node)
         return NULL;
 
+    node->start = encoder_start;
+    node->stop = encoder_stop;
     node->process = encoder_process;
-
     node->destroy = encoder_destroy;
 
     return node;

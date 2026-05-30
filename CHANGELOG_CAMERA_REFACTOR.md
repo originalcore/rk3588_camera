@@ -294,16 +294,31 @@ bin/camera
 
 ## 9. Remaining Recommended Improvements
 
+## 10. Industrial Skeleton Step
+
+The framework was further optimized toward an industrial skeleton.
+
+Changes:
+
+- Added `CameraConfig` so device path, width, height, pixel format, and buffer count are configured through one structure instead of being hardcoded inside `camera_open()`.
+- Added `CameraState` with:
+  - `CAMERA_STATE_CLOSED`
+  - `CAMERA_STATE_OPEN`
+  - `CAMERA_STATE_RUNNING`
+  - `CAMERA_STATE_ERROR`
+- Added state validation for open/start/stop/poll paths.
+- Added `camera_stop()` and made `camera_close()` stop a running camera before releasing resources.
+- Added V4L2 capability probing with `VIDIOC_QUERYCAP`.
+- Added `v4l2_device_stop()` using `VIDIOC_STREAMOFF`.
+- Extended `PipelineNode` with `start` and `stop` callbacks.
+- Added `pipeline_start()` and `pipeline_stop()`.
+- Updated encoder and RTSP nodes to implement no-op start/stop callbacks.
+- Updated `main.c` to create the camera from `CameraConfig`.
+
 These were not forced into the current change set because they affect broader design or runtime behavior:
 
-- Add configurable camera parameters instead of hardcoding:
-  - device path: `/dev/video0`
-  - width: `1920`
-  - height: `1080`
-  - pixel format: `V4L2_PIX_FMT_NV12`
 - Add a real RTSP implementation or rename the current RTSP node to a debug/output node.
 - Add signal handling in `main.c` so Ctrl-C exits through the normal destroy path.
-- Add `VIDIOC_STREAMOFF` before unmapping V4L2 buffers.
+- Track V4L2 streaming state explicitly to avoid redundant `VIDIOC_STREAMOFF`.
 - Decide whether `CameraManager` should always own cameras or support non-owning registration.
 - Remove or ignore IDE cache files under `camera.si4project/cache/` if they should not be versioned.
-

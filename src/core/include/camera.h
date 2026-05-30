@@ -27,8 +27,29 @@ extern "C" {
 
 #define MAX_FRAME_LISTENER 16
 
+typedef enum
+{
+    CAMERA_STATE_CLOSED = 0,
+    CAMERA_STATE_OPEN,
+    CAMERA_STATE_RUNNING,
+    CAMERA_STATE_ERROR
+} CameraState;
+
 typedef struct
 {
+    const char *device;
+    int width;
+    int height;
+    unsigned int pixfmt;
+    int buffer_count;
+} CameraConfig;
+
+typedef struct
+{
+
+    CameraConfig config;
+
+    CameraState state;
 
     V4L2Device device;
 
@@ -40,21 +61,35 @@ typedef struct
 
 } Camera;
 
-Camera *camera_create(    const char *dev);
+Camera *camera_create(
+    const CameraConfig *config);
 
-void camera_destroy(    Camera *cam);
+void camera_destroy(
+    Camera *cam);
 
-int camera_open(    Camera *cam, const char *dev);
+int camera_open(
+    Camera *cam,
+    const CameraConfig *config);
 
-int camera_start(    Camera *cam);
+int camera_start(
+    Camera *cam);
 
-int camera_poll(    Camera *cam);
+int camera_stop(
+    Camera *cam);
 
-int camera_add_listener(    Camera *cam,     FrameListener *listener);
+int camera_poll(
+    Camera *cam);
 
-int camera_set_pipeline(    Camera *cam,     PipelineNode *node);
+int camera_add_listener(
+    Camera *cam,
+    FrameListener *listener);
 
-void camera_close(Camera *cam);
+int camera_set_pipeline(
+    Camera *cam,
+    PipelineNode *node);
+
+void camera_close(
+    Camera *cam);
 
 
 #ifdef __cplusplus

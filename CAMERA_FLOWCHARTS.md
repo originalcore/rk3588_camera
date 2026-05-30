@@ -8,8 +8,9 @@ This document uses Mermaid diagrams. Markdown viewers that support Mermaid can r
 
 ```mermaid
 flowchart TD
-    A[main] --> B[camera_manager_create]
-    B -->|success| C[camera_create /dev/video0]
+    A[main] --> A1[build CameraConfig]
+    A1 --> B[camera_manager_create]
+    B -->|success| C[camera_create config]
     B -->|failed| Z1[return 1]
 
     C -->|success| D[camera_start]
@@ -71,19 +72,25 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[camera_create dev] --> B[calloc Camera]
-    B -->|failed| Z[return NULL]
-    B -->|success| C[camera_open]
+    A[camera_create config] --> B[validate CameraConfig]
+    B -->|invalid| Z[return NULL]
+    B -->|valid| C[calloc Camera]
+    C -->|failed| Z
+    C -->|success| D[camera_open]
 
-    C --> D[v4l2_device_open]
-    D -->|failed| F1[free Camera]
+    D --> E[v4l2_device_open]
+    E -->|failed| F1[free Camera]
     F1 --> Z
 
-    D -->|success| E[v4l2_device_set_format 1920x1080 NV12]
-    E -->|failed| E1[v4l2_device_close]
-    E1 --> F1
+    E -->|success| Q[VIDIOC_QUERYCAP]
+    Q -->|failed| Q1[v4l2_device_close]
+    Q1 --> F1
 
-    E -->|success| G[v4l2_device_request_buffer 4]
+    Q -->|success| SF[v4l2_device_set_format from config]
+    SF -->|failed| S1[v4l2_device_close]
+    S1 --> F1
+
+    SF -->|success| G[v4l2_device_request_buffer from config]
     G -->|failed| G1[v4l2_device_close]
     G1 --> F1
 
@@ -180,4 +187,3 @@ flowchart LR
     PN --> FR
     FL --> FR
 ```
-

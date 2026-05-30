@@ -18,6 +18,7 @@
 #include "pipeline.h"
 #include "pipeline_node_factory.h"
 
+#include <linux/videodev2.h>
 #include <stdio.h>
 
 void print_version(void)
@@ -39,6 +40,14 @@ int main(int argc, char *argv[])
 
     PipelineNode *rtsp;
 
+    CameraConfig config = {
+        .device = "/dev/video0",
+        .width = 1920,
+        .height = 1080,
+        .pixfmt = V4L2_PIX_FMT_NV12,
+        .buffer_count = 4,
+    };
+
     (void)argc;
     (void)argv;
 
@@ -51,7 +60,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    front_cam = camera_create("/dev/video0");
+    front_cam = camera_create(&config);
     if (!front_cam)
     {
         fprintf(stderr, "failed to open camera device\n");

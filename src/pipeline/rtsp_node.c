@@ -17,7 +17,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int rtsp_process(    PipelineNode *node,  Frame *frame)
+static int rtsp_start(
+    PipelineNode *node)
+{
+    (void)node;
+
+    return 0;
+}
+
+static int rtsp_stop(
+    PipelineNode *node)
+{
+    (void)node;
+
+    return 0;
+}
+
+static int rtsp_process(
+    PipelineNode *node,
+    Frame *frame)
 {
     (void)node;
 
@@ -40,8 +58,9 @@ PipelineNode *rtsp_node_create(void)
     if (!node)
         return NULL;
 
+    node->start = rtsp_start;
+    node->stop = rtsp_stop;
     node->process = rtsp_process;
-
     node->destroy = rtsp_destroy;
 
     return node;

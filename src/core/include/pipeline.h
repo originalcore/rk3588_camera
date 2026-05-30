@@ -22,6 +22,12 @@ extern "C" {
 
 #include "pipeline_node.h"
 
+int pipeline_start(
+    PipelineNode *node);
+
+int pipeline_stop(
+    PipelineNode *node);
+
 int pipeline_push_frame(
     PipelineNode *node,
     Frame *frame);

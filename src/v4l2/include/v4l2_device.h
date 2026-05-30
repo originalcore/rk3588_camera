@@ -56,6 +56,9 @@ int v4l2_device_open(
     V4L2Device *dev,
     const char *name);
 
+int v4l2_device_query_capability(
+    V4L2Device *dev);
+
 int v4l2_device_set_format(
     V4L2Device *dev,
     int width,
@@ -67,6 +70,9 @@ int v4l2_device_request_buffer(
     int count);
 
 int v4l2_device_start(
+    V4L2Device *dev);
+
+int v4l2_device_stop(
     V4L2Device *dev);
 
 int v4l2_device_capture(

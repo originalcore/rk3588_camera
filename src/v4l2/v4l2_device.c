@@ -59,6 +59,31 @@ int v4l2_device_open(
     return 0;
 }
 
+int v4l2_device_query_capability(
+    V4L2Device *dev)
+{
+    struct v4l2_capability cap;
+
+    if (!dev ||
+        dev->fd < 0)
+        return -1;
+
+    memset(&cap, 0, sizeof(cap));
+
+    if (ioctl(dev->fd,
+              VIDIOC_QUERYCAP,
+              &cap) < 0)
+        return -1;
+
+    if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE))
+        return -1;
+
+    if (!(cap.capabilities & V4L2_CAP_STREAMING))
+        return -1;
+
+    return 0;
+}
+
 int v4l2_device_set_format(
     V4L2Device *dev,
     int width,
@@ -177,6 +202,20 @@ int v4l2_device_start(
                  &type);
 }
 
+int v4l2_device_stop(
+    V4L2Device *dev)
+{
+    int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    if (!dev ||
+        dev->fd < 0)
+        return -1;
+
+    return ioctl(dev->fd,
+                 VIDIOC_STREAMOFF,
+                 &type);
+}
+
 int v4l2_device_capture(
     V4L2Device *dev,
     Frame *frame)
@@ -244,6 +283,9 @@ void v4l2_device_close(
 {
     if (!dev)
         return;
+
+    if (dev->fd >= 0)
+        v4l2_device_stop(dev);
 
     v4l2_device_release_buffers(dev);
 

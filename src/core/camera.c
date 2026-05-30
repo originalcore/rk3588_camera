@@ -16,8 +16,18 @@
 
 #include <linux/videodev2.h>
 #include <stdlib.h>
+#include <string.h>
 
-static void camera_dispatch_frame(    Camera *cam,    Frame *frame)
+static void camera_set_error(
+    Camera *cam)
+{
+    if (cam)
+        cam->state = CAMERA_STATE_ERROR;
+}
+
+static void camera_dispatch_frame(
+    Camera *cam,
+    Frame *frame)
 {
     for (int i = 0;
          i < cam->listener_count;
@@ -30,9 +40,27 @@ static void camera_dispatch_frame(    Camera *cam,    Frame *frame)
     }
 }
 
-int camera_add_listener(    Camera *cam,     FrameListener *listener)
+static int camera_validate_config(
+    const CameraConfig *config)
 {
-    if (!cam || !listener || cam->listener_count >= MAX_FRAME_LISTENER)
+    if (!config ||
+        !config->device ||
+        config->width <= 0 ||
+        config->height <= 0 ||
+        config->buffer_count <= 0 ||
+        config->buffer_count > MAX_BUFFER_COUNT)
+        return -1;
+
+    return 0;
+}
+
+int camera_add_listener(
+    Camera *cam,
+    FrameListener *listener)
+{
+    if (!cam ||
+        !listener ||
+        cam->listener_count >= MAX_FRAME_LISTENER)
         return -1;
 
     cam->listeners[cam->listener_count++] = listener;
@@ -40,12 +68,16 @@ int camera_add_listener(    Camera *cam,     FrameListener *listener)
     return 0;
 }
 
-int camera_set_pipeline(    Camera *cam,     PipelineNode *node)
+int camera_set_pipeline(
+    Camera *cam,
+    PipelineNode *node)
 {
-    if (!cam)
+    if (!cam ||
+        cam->state == CAMERA_STATE_RUNNING)
         return -1;
 
-    if (cam->pipeline && cam->pipeline != node)
+    if (cam->pipeline &&
+        cam->pipeline != node)
         pipeline_destroy(cam->pipeline);
 
     cam->pipeline = node;
@@ -53,7 +85,8 @@ int camera_set_pipeline(    Camera *cam,     PipelineNode *node)
     return 0;
 }
 
-Camera *camera_create(    const char *dev)
+Camera *camera_create(
+    const CameraConfig *config)
 {
     Camera *cam;
 
@@ -61,7 +94,9 @@ Camera *camera_create(    const char *dev)
     if (!cam)
         return NULL;
 
-    if (camera_open(cam, dev) < 0)
+    cam->state = CAMERA_STATE_CLOSED;
+
+    if (camera_open(cam, config) < 0)
     {
         free(cam);
         return NULL;
@@ -70,7 +105,8 @@ Camera *camera_create(    const char *dev)
     return cam;
 }
 
-void camera_destroy(    Camera *cam)
+void camera_destroy(
+    Camera *cam)
 {
     if (!cam)
         return;
@@ -79,60 +115,155 @@ void camera_destroy(    Camera *cam)
     free(cam);
 }
 
-int camera_open(    Camera *cam, const char *dev)
+int camera_open(
+    Camera *cam,
+    const CameraConfig *config)
 {
-    if (!cam || !dev)
+    if (!cam ||
+        camera_validate_config(config) < 0 ||
+        cam->state != CAMERA_STATE_CLOSED)
         return -1;
 
+    memset(&cam->config, 0, sizeof(cam->config));
+    cam->config = *config;
     cam->listener_count = 0;
     cam->pipeline = NULL;
 
-    if (v4l2_device_open(&cam->device, dev) < 0)
-        return -1;
-
-    if (v4l2_device_set_format( &cam->device, 1920, 1080, V4L2_PIX_FMT_NV12) < 0)
+    if (v4l2_device_open(&cam->device,
+                         config->device) < 0)
     {
-        v4l2_device_close(&cam->device);
+        camera_set_error(cam);
         return -1;
     }
 
-    if (v4l2_device_request_buffer(&cam->device, 4) < 0)
+    if (v4l2_device_query_capability(&cam->device) < 0)
     {
         v4l2_device_close(&cam->device);
+        camera_set_error(cam);
         return -1;
     }
+
+    if (v4l2_device_set_format(
+            &cam->device,
+            config->width,
+            config->height,
+            config->pixfmt) < 0)
+    {
+        v4l2_device_close(&cam->device);
+        camera_set_error(cam);
+        return -1;
+    }
+
+    if (v4l2_device_request_buffer(
+            &cam->device,
+            config->buffer_count) < 0)
+    {
+        v4l2_device_close(&cam->device);
+        camera_set_error(cam);
+        return -1;
+    }
+
+    cam->state = CAMERA_STATE_OPEN;
 
     return 0;
 }
 
-int camera_start(    Camera *cam)
+int camera_start(
+    Camera *cam)
 {
-    return v4l2_device_start(&cam->device);
+    if (!cam ||
+        cam->state != CAMERA_STATE_OPEN)
+        return -1;
+
+    if (cam->pipeline &&
+        pipeline_start(cam->pipeline) < 0)
+    {
+        camera_set_error(cam);
+        return -1;
+    }
+
+    if (v4l2_device_start(&cam->device) < 0)
+    {
+        if (cam->pipeline)
+            pipeline_stop(cam->pipeline);
+
+        camera_set_error(cam);
+        return -1;
+    }
+
+    cam->state = CAMERA_STATE_RUNNING;
+
+    return 0;
 }
 
-int camera_poll(    Camera *cam)
+int camera_stop(
+    Camera *cam)
+{
+    int ret = 0;
+
+    if (!cam)
+        return -1;
+
+    if (cam->state == CAMERA_STATE_CLOSED)
+        return 0;
+
+    if (cam->state == CAMERA_STATE_RUNNING)
+    {
+        if (v4l2_device_stop(&cam->device) < 0)
+            ret = -1;
+
+        if (cam->pipeline &&
+            pipeline_stop(cam->pipeline) < 0)
+            ret = -1;
+    }
+
+    cam->state = CAMERA_STATE_OPEN;
+
+    return ret;
+}
+
+int camera_poll(
+    Camera *cam)
 {
     Frame frame;
 
-    if (v4l2_device_capture(&cam->device, &frame) < 0)
+    if (!cam ||
+        cam->state != CAMERA_STATE_RUNNING)
         return -1;
 
-    camera_dispatch_frame(cam, &frame);
+    if (v4l2_device_capture(&cam->device, &frame) < 0)
+    {
+        camera_set_error(cam);
+        return -1;
+    }
 
     if (cam->pipeline &&
         pipeline_push_frame(cam->pipeline, &frame) < 0)
+    {
+        v4l2_device_queue(&cam->device, frame.index);
+        camera_set_error(cam);
         return -1;
+    }
+
+    camera_dispatch_frame(cam, &frame);
 
     if (v4l2_device_queue(&cam->device, frame.index) < 0)
+    {
+        camera_set_error(cam);
         return -1;
+    }
 
     return 0;
 }
 
-void camera_close(    Camera *cam)
+void camera_close(
+    Camera *cam)
 {
     if (!cam)
         return;
+
+    if (cam->state == CAMERA_STATE_RUNNING)
+        camera_stop(cam);
 
     if (cam->pipeline)
     {
@@ -142,4 +273,5 @@ void camera_close(    Camera *cam)
 
     v4l2_device_close(&cam->device);
     cam->listener_count = 0;
+    cam->state = CAMERA_STATE_CLOSED;
 }

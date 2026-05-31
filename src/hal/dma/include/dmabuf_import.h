@@ -1,7 +1,18 @@
 /*******************************************************************************
   * @file        dmabuf_import.h
+  * @brief       h File
+  * @author      weihui.jia
+  * @attention
   * @brief       DMA-BUF import helpers
+  * @history
+  * Date       Version Author     Description
+  * ========== ======= =========  ==============================================
+  * 2026-5-31  V1.0.0  weihui.jia Create
+  * 
+  * @Copyright (C)  2026 originl.Co.Ltd all right reserved
 *******************************************************************************/
+/*@{*/
+
 
 #ifndef __DMABUF_IMPORT_H_
 #define __DMABUF_IMPORT_H_

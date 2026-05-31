@@ -1,7 +1,17 @@
 /*******************************************************************************
   * @file        dmabuf_sync.c
+  * @brief       c File
+  * @author      weihui.jia
+  * @attention
   * @brief       DMA-BUF CPU/device synchronization
+  * @history
+  * Date       Version Author     Description
+  * ========== ======= =========  ==============================================
+  * 2026-5-31  V1.0.0  weihui.jia Create
+  * 
+  * @Copyright (C)  2026 originl.Co.Ltd all right reserved
 *******************************************************************************/
+/*@{*/
 
 #include "dmabuf_sync.h"
 

@@ -15,8 +15,8 @@ SUBLEVEL = 0
 PATCHLEVEL = 12
 EXTRAVERSION = -rc1
 
-#CROSS_COMPILE = 
-ARCH = i386
+CROSS_COMPILE = aarch64-none-linux-gnu-
+ARCH = ROCKCHIP3588
 AS 	= $(CROSS_COMPILE)as
 LD 	= $(CROSS_COMPILE)ld
 CC 	= $(CROSS_COMPILE)gcc
@@ -40,21 +40,21 @@ export STRIP OBJCOPY OBJDUMP
 export CAMERA_FRAMEWORK_BUILD
 
 
-CFLAGS := -Wall -O2 -g -I $(shell pwd)/version
+CFLAGS := -Wall -O2 -g -I $(shell pwd)/version -I $(shell pwd)/src/app/include -I $(shell pwd)/src/framework/callback/include -I $(shell pwd)/src/framework/core/include -I $(shell pwd)/src/framework/pipeline/include -I $(shell pwd)/src/hal/dma/include -I $(shell pwd)/src/hal/isp/include -I $(shell pwd)/src/hal/v4l2/include -I $(shell pwd)/src/utils/log/include -I $(shell pwd)/src/thread/include -I $(shell pwd)/src/message/include -I $(shell pwd)/3rdparty/zlog/src
 CFLAGS += -DCAMERA_FRAMEWORK_BUILD=1
 
 ifeq (i386,$(ARCH))
-	CFLAGS += -I $(shell pwd)/src/app/include
-	CFLAGS += -I $(shell pwd)/src/framework/callback/include
-	CFLAGS += -I $(shell pwd)/src/framework/core/include
-	CFLAGS += -I $(shell pwd)/src/framework/pipeline/include
-	CFLAGS += -I $(shell pwd)/src/hal/dma/include
-	CFLAGS += -I $(shell pwd)/src/hal/isp/include
-	CFLAGS += -I $(shell pwd)/src/hal/v4l2/include
-	CFLAGS += -I $(shell pwd)/src/utils/log/include
-	CFLAGS += -I $(shell pwd)/src/thread/include
-	CFLAGS += -I $(shell pwd)/src/message/include
-	CFLAGS += -I $(shell pwd)/3rdparty/zlog/src
+	# CFLAGS += -I $(shell pwd)/src/app/include
+	# CFLAGS += -I $(shell pwd)/src/framework/callback/include
+	# CFLAGS += -I $(shell pwd)/src/framework/core/include
+	# CFLAGS += -I $(shell pwd)/src/framework/pipeline/include
+	# CFLAGS += -I $(shell pwd)/src/hal/dma/include
+	# CFLAGS += -I $(shell pwd)/src/hal/isp/include
+	# CFLAGS += -I $(shell pwd)/src/hal/v4l2/include
+	# CFLAGS += -I $(shell pwd)/src/utils/log/include
+	# CFLAGS += -I $(shell pwd)/src/thread/include
+	# CFLAGS += -I $(shell pwd)/src/message/include
+	# CFLAGS += -I $(shell pwd)/3rdparty/zlog/src
 	LDFLAGS := -lm -lrt -ldl -lpthread
 endif
 
@@ -68,6 +68,12 @@ ifeq (hisiv3531,$(ARCH))
 	CFLAGS += -I $(shell pwd)/src/include -I $(shell pwd)/3rds/hisi3531/bsl/include/
 	LDFLAGS := -L $(shell pwd)/3rds/hisi3531/bsl/lib/
 	LIB += -lm -lbsl -lrt -lpthread
+endif
+
+ifeq (ROCKCHIP3588,$(ARCH))
+	#CFLAGS += -I $(shell pwd)/src/include -I $(shell pwd)/3rds/hisi3531/bsl/include/
+	#LDFLAGS := -L $(shell pwd)/3rds/hisi3531/bsl/lib/
+	LIB += -lm -lrt -lpthread
 endif
 
 export CFLAGS LDFLAGS LIB

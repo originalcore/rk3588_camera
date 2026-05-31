@@ -31,7 +31,9 @@ typedef struct
 
 static void print_version(void)
 {
+    CAMERA_LOG_INFO("******************************************************************");
     CAMERA_LOG_INFO("%s", version_string);
+    CAMERA_LOG_INFO("******************************************************************\n");
 }
 
 static void print_usage(
